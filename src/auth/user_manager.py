@@ -10,22 +10,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from fastapi.param_functions import Form
 
-from src.auth.exceptions import UserAlreadyExists, InvalidPassword
+from src.auth.exceptions import UserAlreadyExists, InvalidPassword, LoginBadCredentials
+from src.auth.shemas import UserLogin
 from src.auth.user_database_adapter import UserDatabaseAdapter
 from src.database import get_async_session
 
 from src.auth.models import User
 from src.config import SECRET
-
-
-class AuthPasswordRequestForm:
-    def __init__(
-            self,
-            username: str = Form(),
-            password: str = Form(),
-    ):
-        self.username = username
-        self.password = password
 
 
 class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
@@ -40,8 +31,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
     ) -> models.UP:
         await self.validate_password(user_create.password, user_create)
 
-        existing_user = await self.user_db.get_by_email(user_create.email) or await self.user_db.get_by_username(
-            user_create.username)
+        existing_user = await self.user_db.get_by_username(user_create.username)
         if existing_user is not None:
             raise UserAlreadyExists
 
@@ -52,6 +42,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
         )
         password = user_dict.pop("password")
         user_dict["hashed_password"] = self.password_helper.hash(password)
+        user_dict["username"] = user_dict["username"].lower()
 
         created_user = await self.user_db.create(user_dict)
 
@@ -73,8 +64,10 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
 
         return
 
+    # todo validate username
+
     async def authenticate(
-            self, credentials: AuthPasswordRequestForm
+            self, credentials: UserLogin
     ) -> Optional[models.UP]:
         """
         Authenticate and return a user following an email and a password.
@@ -83,13 +76,13 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
 
         :param credentials: The user credentials.
         """
-        try:
-            user = await self.get_by_email(credentials.username)
-        except exceptions.UserNotExists:
+        user = await self.user_db.get_by_email(credentials.username) or await self.user_db.get_by_username(
+            credentials.username)
+        if user is None:
             # Run the hasher to mitigate timing attack
             # Inspired from Django: https://code.djangoproject.com/ticket/20760
             self.password_helper.hash(credentials.password)
-            return None
+            raise LoginBadCredentials
 
         verified, updated_password_hash = self.password_helper.verify_and_update(
             credentials.password, user.hashed_password
@@ -114,11 +107,3 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
             response: Optional[Response] = None,
     ) -> None:
         await self.user_db.update(user, {"is_active": True})
-
-
-async def get_user_db(session: AsyncSession = Depends(get_async_session)):
-    yield UserDatabaseAdapter(session, User)
-
-
-async def get_user_manager(user_db=Depends(get_user_db)):
-    yield UserManager(user_db)
