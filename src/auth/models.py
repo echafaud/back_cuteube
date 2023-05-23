@@ -33,10 +33,11 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
         Boolean, default=False, nullable=False
     )
 
+    posted_comments: Mapped[List["Comment"]] = relationship("Comment", backref="posted_comments", lazy="selectin")
     videos: Mapped[List["Video"]] = relationship("Video", back_populates="user", lazy="selectin")
-    liked_videos: Mapped[List["Like"]] = relationship("Video", secondary="like",
-                                                      primaryjoin="and_(User.id==Like.user_id, Like.status)",
-                                                      back_populates="liked_users", lazy="selectin")
-    disliked_videos: Mapped[List["Like"]] = relationship("Video", secondary="like",
-                                                         primaryjoin="and_(User.id==Like.user_id, Like.status==False)",
-                                                         back_populates="disliked_users", lazy="selectin")
+    liked_videos: Mapped[List["Video"]] = relationship("Video", secondary="like",
+                                                       primaryjoin="and_(User.id==Like.user_id, Like.status)",
+                                                       back_populates="liked_users", lazy="selectin")
+    disliked_videos: Mapped[List["Video"]] = relationship("Video", secondary="like",
+                                                          primaryjoin="and_(User.id==Like.user_id, Like.status==False)",
+                                                          back_populates="disliked_users", lazy="selectin")

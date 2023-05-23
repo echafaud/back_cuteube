@@ -19,6 +19,9 @@ from src.auth.models import User
 from src.auth.shemas import UserRead, UserCreate, UserLogin
 from src.auth.auth import get_user_manager
 from src.auth.user_manager import UserManager
+from src.comment.comment import get_comment_manager
+from src.comment.comment_manager import CommentManager
+from src.comment.shemas import CommentRead, BaseComment, CommentEdit, CommentCreate, CommentRemove
 from src.like.like import get_like_manager
 from src.like.like_manager import LikeManager
 from src.like.shemas import BaseLike
@@ -140,9 +143,8 @@ async def get_video_likes(id: uuid.UUID, video_manager: VideoManager = Depends(g
 @api_v1.method()
 async def rate(like: BaseLike,
                user: User = Depends(access_user),
-               like_manager: LikeManager = Depends(get_like_manager)) -> str:
+               like_manager: LikeManager = Depends(get_like_manager)):
     await like_manager.rate(user, like)
-    return str(like.video_id)
 
 
 @api_v1.method()
@@ -150,6 +152,27 @@ async def remove_rating(like: BaseLike,
                         user: User = Depends(access_user),
                         like_manager: LikeManager = Depends(get_like_manager)):
     await like_manager.remove_rating(user, like)
+
+
+@api_v1.method()
+async def post_comment(comment: CommentCreate,
+                       user: User = Depends(access_user),
+                       comment_manager: CommentManager = Depends(get_comment_manager)) -> CommentRead:
+    return await comment_manager.post(user, comment)
+
+
+@api_v1.method()
+async def edit_comment(comment: CommentEdit,
+                       user: User = Depends(access_user),
+                       comment_manager: CommentManager = Depends(get_comment_manager)) -> CommentRead:
+    return await comment_manager.edit(user, comment)
+
+
+@api_v1.method()
+async def remove_comment(comment: CommentRemove,
+                         user: User = Depends(access_user),
+                         comment_manager: CommentManager = Depends(get_comment_manager)):
+    await comment_manager.remove(user, comment)
 
 
 app.bind_entrypoint(api_v1)
