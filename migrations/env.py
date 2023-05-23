@@ -10,6 +10,7 @@ from alembic import context
 from src.config import DB_HOST, DB_PORT, DB_USER, DB_NAME, DB_PASS
 from src.auth.models import *
 from src.video.models import *
+from src.like.models import *
 from src.database import Base
 
 # this is the Alembic Config object, which provides

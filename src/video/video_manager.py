@@ -49,3 +49,12 @@ class VideoManager:
         # view_video_dict = view_video.dict()
         # view_video_dict["link"] = link
         return link
+
+    async def get_liked_videos(self, user: User, limit: int):
+        return user.liked_videos[:limit]
+
+    async def get_video_likes(self, id: uuid.UUID) -> int:
+        video = await self.video_db.get(id)
+        if video is None:
+            raise VideoNotExists
+        return len(video.liked_users)

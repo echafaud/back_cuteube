@@ -19,6 +19,9 @@ from src.auth.models import User
 from src.auth.shemas import UserRead, UserCreate, UserLogin
 from src.auth.auth import get_user_manager
 from src.auth.user_manager import UserManager
+from src.like.like import get_like_manager
+from src.like.like_manager import LikeManager
+from src.like.shemas import BaseLike
 from src.video.shemas import VideoUpload, VideoView
 from src.video.video import get_video_manager
 from src.video.video_manager import VideoManager
@@ -120,6 +123,33 @@ async def get_video_link(id: uuid.UUID,
 async def get_latest_videos(limit: int = 10,
                             video_manager: VideoManager = Depends(get_video_manager)) -> List[VideoView]:
     return await video_manager.get_latest_videos(limit)
+
+
+@api_v1.method()
+async def get_liked_videos(limit: int = 10,
+                           user: User = Depends(access_user),
+                           video_manager: VideoManager = Depends(get_video_manager)) -> List[VideoView]:
+    return await video_manager.get_liked_videos(user, limit)
+
+
+@api_v1.method()
+async def get_video_likes(id: uuid.UUID, video_manager: VideoManager = Depends(get_video_manager)) -> int:
+    return await video_manager.get_video_likes(id)
+
+
+@api_v1.method()
+async def rate(like: BaseLike,
+               user: User = Depends(access_user),
+               like_manager: LikeManager = Depends(get_like_manager)) -> str:
+    await like_manager.rate(user, like)
+    return str(like.video_id)
+
+
+@api_v1.method()
+async def remove_rating(like: BaseLike,
+                        user: User = Depends(access_user),
+                        like_manager: LikeManager = Depends(get_like_manager)):
+    await like_manager.remove_rating(user, like)
 
 
 app.bind_entrypoint(api_v1)

@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import List
 
 from fastapi_users_db_sqlalchemy import GUID, UUID_ID
 from sqlalchemy import String, TIMESTAMP, ForeignKey
@@ -16,4 +17,12 @@ class Video(Base):
     upload_at: Mapped[TIMESTAMP] = mapped_column(TIMESTAMP, default=datetime.utcnow)
     author: Mapped[UUID_ID] = mapped_column(GUID, ForeignKey("user.id"))
 
-    user: Mapped["User"] = relationship("User", back_populates="videos")
+    user: Mapped["User"] = relationship("User", back_populates="videos", lazy="selectin")
+    liked_users: Mapped[List["Like"]] = relationship("User", secondary="like",
+                                                     primaryjoin="and_(Video.id == Like.video_id, Like.status)",
+                                                     back_populates="liked_videos",
+                                                     lazy="selectin")
+    disliked_users: Mapped[List["Like"]] = relationship("User", secondary="like",
+                                                        primaryjoin="and_(Video.id == Like.video_id, Like.status == False)",
+                                                        back_populates="disliked_videos",
+                                                        lazy="selectin")
