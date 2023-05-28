@@ -25,6 +25,9 @@ from src.comment.shemas import CommentRead, BaseComment, CommentEdit, CommentCre
 from src.like.like import get_like_manager
 from src.like.like_manager import LikeManager
 from src.like.shemas import BaseLike
+from src.subscription.shemas import BaseSubscription
+from src.subscription.subscription import get_subscription_manager
+from src.subscription.subscription_manager import SubscriptionManager
 from src.video.shemas import VideoUpload, VideoView
 from src.video.video import get_video_manager
 from src.video.video_manager import VideoManager
@@ -196,6 +199,34 @@ async def remove_view(view: ViewRemove,
                       user: User = Depends(access_user),
                       view_manager: ViewManager = Depends(get_view_manager)):
     await view_manager.remove_user_view(user, view)
+
+
+@api_v1.method()
+async def subscribe(subscription: BaseSubscription,
+                    user: User = Depends(access_user),
+                    subscription_manager: SubscriptionManager = Depends(get_subscription_manager)):
+    await subscription_manager.subscribe(subscription, user)
+
+
+@api_v1.method()
+async def unsubscribe(subscription: BaseSubscription,
+                      user: User = Depends(access_user),
+                      subscription_manager: SubscriptionManager = Depends(get_subscription_manager)):
+    await subscription_manager.unsubscribe(subscription, user)
+
+
+@api_v1.method()
+async def get_user_subscribed(
+        user: User = Depends(access_user),
+        subscription_manager: SubscriptionManager = Depends(get_subscription_manager)) -> List[UserRead]:
+    return await subscription_manager.get_user_subscribed(user)
+
+
+@api_v1.method()
+async def get_user_subscribers(
+        user: User = Depends(access_user),
+        subscription_manager: SubscriptionManager = Depends(get_subscription_manager)) -> List[UserRead]:
+    return await subscription_manager.get_user_subscribers(user)
 
 
 app.bind_entrypoint(api_v1)

@@ -27,3 +27,6 @@ class Video(Base):
                                                         primaryjoin="and_(Video.id == Like.video_id, Like.status == False)",
                                                         back_populates="disliked_videos",
                                                         lazy="selectin")
+    viewed_users: Mapped[List["User"]] = relationship("User", back_populates="viewed_videos",
+                                                      primaryjoin="Video.id==UserView.video_id",
+                                                      secondary="user_view", lazy="selectin")

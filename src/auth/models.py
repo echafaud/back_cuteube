@@ -3,11 +3,9 @@ from datetime import datetime
 from typing import List
 
 from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTableUUID, GUID, UUID_ID
-from sqlalchemy import (JSON, TIMESTAMP, Boolean, Column, ForeignKey, Integer,
-                        String, Table)
-
+from sqlalchemy import (TIMESTAMP, Boolean, String)
 # from database import metadata
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, backref
 
 from src.database import Base
 
@@ -41,3 +39,15 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     disliked_videos: Mapped[List["Video"]] = relationship("Video", secondary="like",
                                                           primaryjoin="and_(User.id==Like.user_id, Like.status==False)",
                                                           back_populates="disliked_users", lazy="selectin")
+    viewed_videos: Mapped[List["Video"]] = relationship("Video", back_populates="viewed_users",
+                                                        primaryjoin="User.id==UserView.author_id",
+                                                        secondary="user_view", lazy="selectin")
+    subscribers: Mapped[List["User"]] = relationship("User",
+                                                     primaryjoin="User.id==Subscription.subscribed",
+                                                     secondaryjoin="User.id==Subscription.subscriber",
+                                                     backref=backref("subscribed", lazy="dynamic"),
+                                                     secondary="subscription", lazy="dynamic",)
+    # subscribers: Mapped[List["User"]] = relationship("User", secondary="subscription", lazy="selectin",
+    #                                                  back_populates="subscribers",
+    #                                                  foreign_keys="Subscription.subscriber",
+    #                                                  primaryjoin="User.id==Subscription.subscriber")
