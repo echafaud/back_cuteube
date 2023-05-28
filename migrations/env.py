@@ -12,6 +12,7 @@ from src.auth.models import *
 from src.video.models import *
 from src.like.models import *
 from src.comment.models import *
+from src.view.models import *
 from src.database import Base
 
 # this is the Alembic Config object, which provides

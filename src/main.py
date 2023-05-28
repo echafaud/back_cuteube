@@ -1,5 +1,5 @@
 import uuid
-from typing import List
+from typing import List, Optional
 
 import fastapi_jsonrpc as jsonrpc
 from pydantic import BaseModel
@@ -28,6 +28,9 @@ from src.like.shemas import BaseLike
 from src.video.shemas import VideoUpload, VideoView
 from src.video.video import get_video_manager
 from src.video.video_manager import VideoManager
+from src.view.shemas import BaseView, ViewRead, ViewRemove
+from src.view.view import get_view_manager
+from src.view.view_manager import ViewManager
 
 app = jsonrpc.API()
 api_v1 = jsonrpc.Entrypoint('/api/v1/jsonrpc')
@@ -78,6 +81,7 @@ adv_auth = Authenticator(get_user_manager, )
 access_user = adv_auth.current_user(token_type="access")
 
 refresh_user = adv_auth.current_user(token_type="refresh")
+optional_access_user = adv_auth.current_user(token_type="access", optional=True)
 
 
 # curr_user = authenticator.current_user()
@@ -99,6 +103,11 @@ async def refresh(response: Response, user: User = Depends(refresh_user),
 
 @api_v1.method()
 async def protected(user: User = Depends(access_user)) -> str:
+    return user.username
+
+
+@api_v1.method()
+async def optional_protected(user: User = Depends(optional_access_user)) -> Optional[str]:
     return user.username
 
 
@@ -173,6 +182,20 @@ async def remove_comment(comment: CommentRemove,
                          user: User = Depends(access_user),
                          comment_manager: CommentManager = Depends(get_comment_manager)):
     await comment_manager.remove(user, comment)
+
+
+@api_v1.method()
+async def record_view(view: BaseView,
+                      user: User = Depends(optional_access_user),
+                      view_manager: ViewManager = Depends(get_view_manager)):
+    await view_manager.record_view(user, view)
+
+
+@api_v1.method()
+async def remove_view(view: ViewRemove,
+                      user: User = Depends(access_user),
+                      view_manager: ViewManager = Depends(get_view_manager)):
+    await view_manager.remove_user_view(user, view)
 
 
 app.bind_entrypoint(api_v1)

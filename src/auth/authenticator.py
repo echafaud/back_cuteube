@@ -13,6 +13,7 @@ from fastapi import WebSocket
 from makefun import with_signature
 
 from src.auth.exceptions import InvalidAuthenticate
+from src.auth.models import User
 
 
 class Authenticator(AuthJWT):
@@ -122,6 +123,8 @@ class Authenticator(AuthJWT):
                 raise InvalidAuthenticate(data={'reason': 'Current user is not verified'})
             elif superuser and not user.is_superuser:
                 raise InvalidAuthenticate(data={'reason': 'Not enough rights'})
+        elif optional:
+            return User()
         else:
             raise InvalidAuthenticate(data={'reason': f'Missing {token_type} token or {csrf_token_name} Token'})
         return user
