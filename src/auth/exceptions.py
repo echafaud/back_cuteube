@@ -9,7 +9,7 @@ class UserAlreadyExists(jsonrpc.BaseError):
 
 
 class InvalidPassword(jsonrpc.BaseError):
-    code = 5001
+    CODE = 5001
     MESSAGE = ErrorCode.REGISTER_INVALID_PASSWORD
 
     class DataModel(BaseModel):
@@ -17,7 +17,7 @@ class InvalidPassword(jsonrpc.BaseError):
 
 
 class InvalidAuthenticate(jsonrpc.BaseError):
-    code = 5002
+    CODE = 5002
     MESSAGE = "Invalid authentication"
 
     class DataModel(BaseModel):

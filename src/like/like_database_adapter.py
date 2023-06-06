@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.like.models import Like
 from src.auth.models import User
+from src.video.models import Video
 
 
 class LikeDatabaseAdapter:
@@ -30,7 +31,7 @@ class LikeDatabaseAdapter:
 
     async def get(self, user_id: uuid.UUID, video_id: uuid.UUID):
         statement = select(self.like_table).filter(
-            self.like_table.user_id == user_id and self.like_table.video_id == video_id)
+            self.like_table.user_id == user_id, self.like_table.video_id == video_id)
         return await self._get(statement)
 
     async def _get(self, statement: Select):
@@ -39,9 +40,17 @@ class LikeDatabaseAdapter:
 
     async def remove(self, user_id: uuid.UUID, video_id: uuid.UUID):
         statement = delete(self.like_table).where(
-            self.like_table.user_id == user_id and self.like_table.video_id == video_id)
+            self.like_table.user_id == user_id, self.like_table.video_id == video_id)
         await self._remove(statement)
 
     async def _remove(self, statement: Delete):
         await self.session.execute(statement)
         await self.session.commit()
+
+    async def get_liked_users(self, video: Video):
+        liked_users = await self.session.scalars(video.liked_users)
+        return liked_users.all()
+
+    async def get_disliked_users(self, video: Video):
+        disliked_users = await self.session.scalars(video.disliked_users)
+        return disliked_users.all()

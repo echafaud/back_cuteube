@@ -15,6 +15,7 @@ class CommentCreate(BaseComment):
 
 
 class CommentRead(CommentCreate):
+    id: uuid.UUID
     author_id: uuid.UUID
 
 

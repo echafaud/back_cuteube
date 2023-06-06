@@ -114,6 +114,21 @@ async def optional_protected(user: User = Depends(optional_access_user)) -> Opti
     return user.username
 
 
+@api_v1.method()
+async def get_user(id: uuid.UUID,
+                   user: User = Depends(optional_access_user),
+                   user_manager: UserManager = Depends(get_user_manager),
+                   subscription_manager: SubscriptionManager = Depends(get_subscription_manager)
+                   ) -> UserRead:
+    requested_user = await user_manager.get(id)
+    user_read = UserRead.from_orm(requested_user)
+    user_read.count_subscribers = await subscription_manager.count_user_subscribers(requested_user)
+    if user.id:
+        subscription = await subscription_manager.get_user_subscribed(user, requested_user)
+        user_read.is_subscribed = True if subscription else False
+    return user_read
+
+
 @app.post("/upload_video")
 async def upload_video(video: VideoUpload = Depends(),
                        user: User = Depends(access_user),
@@ -124,14 +139,36 @@ async def upload_video(video: VideoUpload = Depends(),
 
 @api_v1.method()
 async def get_video(id: uuid.UUID,
-                    video_manager: VideoManager = Depends(get_video_manager)) -> VideoView:
-    return await video_manager.get_video(id)
+                    user: User = Depends(optional_access_user),
+                    video_manager: VideoManager = Depends(get_video_manager),
+                    view_manager: ViewManager = Depends(get_view_manager),
+                    like_manager: LikeManager = Depends(get_like_manager)
+                    ) -> VideoView:
+    video = await video_manager.get_video(id)
+    video_view = VideoView.from_orm(video)
+    video_view.likes = await like_manager.count_video_likes(video)
+    video_view.dislikes = await like_manager.count_video_dislikes(video)
+    video_view.views = await view_manager.count_video_views(video)
+    if user.id:
+        user_view = await view_manager.get_user_view(user, video)
+        if user_view:
+            video_view.stop_timecode = user_view.stop_timecode
+        like = await like_manager.get_rate(user, video)
+        video_view.like = like.status if like else like
+
+    return video_view
 
 
 @api_v1.method()
 async def get_video_link(id: uuid.UUID,
                          video_manager: VideoManager = Depends(get_video_manager)) -> str:
     return await video_manager.get_video_link(id)
+
+
+@api_v1.method()
+async def get_preview_link(id: uuid.UUID,
+                           video_manager: VideoManager = Depends(get_video_manager)) -> str:
+    return await video_manager.get_preview_link(id)
 
 
 @api_v1.method()
@@ -153,6 +190,13 @@ async def get_video_likes(id: uuid.UUID, video_manager: VideoManager = Depends(g
 
 
 @api_v1.method()
+async def remove_video(id: uuid.UUID,
+                       user: User = Depends(access_user),
+                       video_manager: VideoManager = Depends(get_video_manager)):
+    await video_manager.delete(user, id)
+
+
+@api_v1.method()
 async def rate(like: BaseLike,
                user: User = Depends(access_user),
                like_manager: LikeManager = Depends(get_like_manager)):
@@ -160,10 +204,10 @@ async def rate(like: BaseLike,
 
 
 @api_v1.method()
-async def remove_rating(like: BaseLike,
+async def remove_rating(id: uuid.UUID,
                         user: User = Depends(access_user),
                         like_manager: LikeManager = Depends(get_like_manager)):
-    await like_manager.remove_rating(user, like)
+    await like_manager.remove_rating(user, id)
 
 
 @api_v1.method()
@@ -181,10 +225,19 @@ async def edit_comment(comment: CommentEdit,
 
 
 @api_v1.method()
-async def remove_comment(comment: CommentRemove,
+async def remove_comment(id: uuid.UUID,
                          user: User = Depends(access_user),
                          comment_manager: CommentManager = Depends(get_comment_manager)):
-    await comment_manager.remove(user, comment)
+    await comment_manager.remove(user, id)
+
+
+@api_v1.method()
+async def get_video_comments(id: uuid.UUID,
+                             video_manager: VideoManager = Depends(get_video_manager),
+                             comment_manager: CommentManager = Depends(get_comment_manager)) -> List[CommentRead]:
+    video = await video_manager.get_video(id)
+    comments = await comment_manager.get_video_comments(video)
+    return comments
 
 
 @api_v1.method()
@@ -202,24 +255,24 @@ async def remove_view(view: ViewRemove,
 
 
 @api_v1.method()
-async def subscribe(subscription: BaseSubscription,
+async def subscribe(id: uuid.UUID,
                     user: User = Depends(access_user),
                     subscription_manager: SubscriptionManager = Depends(get_subscription_manager)):
-    await subscription_manager.subscribe(subscription, user)
+    await subscription_manager.subscribe(id, user)
 
 
 @api_v1.method()
-async def unsubscribe(subscription: BaseSubscription,
+async def unsubscribe(id: uuid.UUID,
                       user: User = Depends(access_user),
                       subscription_manager: SubscriptionManager = Depends(get_subscription_manager)):
-    await subscription_manager.unsubscribe(subscription, user)
+    await subscription_manager.unsubscribe(id, user)
 
 
 @api_v1.method()
-async def get_user_subscribed(
+async def get_all_user_subscribed(
         user: User = Depends(access_user),
         subscription_manager: SubscriptionManager = Depends(get_subscription_manager)) -> List[UserRead]:
-    return await subscription_manager.get_user_subscribed(user)
+    return await subscription_manager.get_all_user_subscribed(user)
 
 
 @api_v1.method()
@@ -227,6 +280,13 @@ async def get_user_subscribers(
         user: User = Depends(access_user),
         subscription_manager: SubscriptionManager = Depends(get_subscription_manager)) -> List[UserRead]:
     return await subscription_manager.get_user_subscribers(user)
+
+
+@api_v1.method()
+async def count_user_subscribers(id: uuid.UUID,
+                                 user_manager: UserManager = Depends(get_user_manager),
+                                 subscription_manager: SubscriptionManager = Depends(get_subscription_manager)) -> int:
+    return await subscription_manager.count_user_subscribers(await user_manager.get(id))
 
 
 app.bind_entrypoint(api_v1)

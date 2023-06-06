@@ -19,7 +19,7 @@ class UserViewDatabaseAdapter:
 
     async def get(self, video_id, user_id):
         statement = select(self.user_view_table).where(
-            self.user_view_table.author_id == user_id and self.user_view_table.video_id == video_id)
+            self.user_view_table.author_id == user_id, self.user_view_table.video_id == video_id)
         return await self._get(statement)
 
     async def _get(self, statement: Select):
@@ -38,9 +38,13 @@ class UserViewDatabaseAdapter:
 
     async def remove(self, view: ViewRemove, user_id: uuid.UUID):
         statement = delete(self.user_view_table).where(
-            self.user_view_table.author_id == user_id and self.user_view_table.video_id == view.video_id)
+            self.user_view_table.author_id == user_id, self.user_view_table.video_id == view.video_id)
         await self._remove(statement)
 
     async def _remove(self, statement: Delete):
         await self.session.execute(statement)
         await self.session.commit()
+
+    async def get_viewed_users(self, video):
+        viewed_users = await self.session.scalars(video.viewed_users)
+        return viewed_users.all()

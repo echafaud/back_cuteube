@@ -9,6 +9,7 @@ from src.comment.models import Comment
 from src.comment.shemas import CommentEdit
 from src.like.models import Like
 from src.auth.models import User
+from src.video.models import Video
 
 
 class CommentDatabaseAdapter:
@@ -48,3 +49,7 @@ class CommentDatabaseAdapter:
     async def _remove(self, statement: Delete):
         await self.session.execute(statement)
         await self.session.commit()
+
+    async def get_video_comments(self, video: Video):
+        comments = await self.session.scalars(video.comments)
+        return comments.all()

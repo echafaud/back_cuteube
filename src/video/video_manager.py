@@ -5,6 +5,7 @@ from botocore.client import BaseClient
 
 from src.auth.models import User
 from src.video.exceptions import UploadVideoException, VideoNotExists
+from src.video.models import Video
 from src.video.shemas import VideoUpload, BaseVideo, VideoView
 from src.config import BUCKET_NAME
 from src.video.video_database_adapter import VideoDatabaseAdapter
@@ -27,11 +28,11 @@ class VideoManager:
         video_model["id"] = video_id
         await self.video_db.create(video_model)
 
-    async def get_latest_videos(self, limit) -> List[VideoView]:
+    async def get_latest_videos(self, limit) -> List[Video]:
         result = await self.video_db.get_latest_videos(limit)
         return result
 
-    async def get_video(self, id: uuid.UUID) -> VideoView:
+    async def get_video(self, id: uuid.UUID) -> Video:
         video = await self.video_db.get(id)
         if video is None:
             raise VideoNotExists
@@ -58,3 +59,18 @@ class VideoManager:
         if video is None:
             raise VideoNotExists
         return len(video.liked_users)
+
+    async def get_preview_link(self, id: uuid.UUID):
+        video = await self.video_db.get(id)
+        if video is None:
+            raise VideoNotExists
+
+        link = await self.s3.generate_presigned_url('get_object',
+                                                    Params={'Bucket': BUCKET_NAME,
+                                                            'Key': f'previews/{str(video.id)}'})
+        return link
+
+    async def delete(self, user: User, id: uuid.UUID):
+        video = await self.video_db.get(id)
+        if video.author == user.id:
+            await self.video_db.remove(video)

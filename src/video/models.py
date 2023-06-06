@@ -17,16 +17,16 @@ class Video(Base):
     upload_at: Mapped[TIMESTAMP] = mapped_column(TIMESTAMP, default=datetime.utcnow)
     author: Mapped[UUID_ID] = mapped_column(GUID, ForeignKey("user.id"))
 
-    comments: Mapped[List["Comment"]] = relationship("Comment", backref="comments", lazy="selectin")
-    user: Mapped["User"] = relationship("User", back_populates="videos", lazy="selectin")
+    # comments: Mapped[List["Comment"]] = relationship("Comment", backref="comments", lazy="dynamic")
+    user: Mapped["User"] = relationship("User", back_populates="videos",)
     liked_users: Mapped[List["User"]] = relationship("User", secondary="like",
                                                      primaryjoin="and_(Video.id == Like.video_id, Like.status)",
                                                      back_populates="liked_videos",
-                                                     lazy="selectin")
+                                                     lazy="dynamic")
     disliked_users: Mapped[List["User"]] = relationship("User", secondary="like",
                                                         primaryjoin="and_(Video.id == Like.video_id, Like.status == False)",
                                                         back_populates="disliked_videos",
-                                                        lazy="selectin")
+                                                        lazy="dynamic")
     viewed_users: Mapped[List["User"]] = relationship("User", back_populates="viewed_videos",
                                                       primaryjoin="Video.id==UserView.video_id",
-                                                      secondary="user_view", lazy="selectin")
+                                                      secondary="user_view", lazy="dynamic")

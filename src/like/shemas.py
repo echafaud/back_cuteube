@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 
 class BaseLike(BaseModel):
-    status: bool
+    status: bool | None
     video_id: uuid.UUID
 
     class Config:

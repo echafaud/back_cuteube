@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from src.auth.models import User
+from src.video.models import Video
 from src.view.shemas import BaseView, ViewRead, ViewRemove
 from src.view.user_view_database_adapter import UserViewDatabaseAdapter
 from src.view.view_database_adapter import ViewDatabaseAdapter
@@ -24,3 +25,17 @@ class ViewManager:
 
     async def remove_user_view(self, user: User, view: ViewRemove):
         await self.user_view_db.remove(view, user.id)
+
+    async def get_viewed_users(self, video: Video):
+        return await self.user_view_db.get_viewed_users(video)
+
+    async def get_video_views(self, video: Video):
+        return await self.view_db.get_video_views(video)
+
+    async def count_video_views(self, video: Video):
+        return len(await self.get_video_views(video))
+
+    async def get_user_view(self, user: User, video: Video, ):
+        user_view = await self.user_view_db.get(video.id, user.id)
+        view = await self.view_db.get(user_view) if user_view else user_view
+        return view

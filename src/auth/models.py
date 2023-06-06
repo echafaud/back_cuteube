@@ -31,17 +31,17 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
         Boolean, default=False, nullable=False
     )
 
-    posted_comments: Mapped[List["Comment"]] = relationship("Comment", backref="posted_comments", lazy="selectin")
-    videos: Mapped[List["Video"]] = relationship("Video", back_populates="user", lazy="selectin")
+    posted_comments: Mapped[List["Comment"]] = relationship("Comment", backref="posted_comments", lazy="dynamic")
+    videos: Mapped[List["Video"]] = relationship("Video", back_populates="user", lazy="dynamic")
     liked_videos: Mapped[List["Video"]] = relationship("Video", secondary="like",
                                                        primaryjoin="and_(User.id==Like.user_id, Like.status)",
-                                                       back_populates="liked_users", lazy="selectin")
+                                                       back_populates="liked_users", lazy="dynamic")
     disliked_videos: Mapped[List["Video"]] = relationship("Video", secondary="like",
                                                           primaryjoin="and_(User.id==Like.user_id, Like.status==False)",
-                                                          back_populates="disliked_users", lazy="selectin")
+                                                          back_populates="disliked_users", lazy="dynamic")
     viewed_videos: Mapped[List["Video"]] = relationship("Video", back_populates="viewed_users",
                                                         primaryjoin="User.id==UserView.author_id",
-                                                        secondary="user_view", lazy="selectin")
+                                                        secondary="user_view", lazy="dynamic")
     subscribers: Mapped[List["User"]] = relationship("User",
                                                      primaryjoin="User.id==Subscription.subscribed",
                                                      secondaryjoin="User.id==Subscription.subscriber",

@@ -10,6 +10,8 @@ class UserRead(schemas.BaseUser[uuid.UUID]):
     name: str
     email: str
     username: str
+    count_subscribers: int = 0
+    is_subscribed: bool = False
     is_active: bool = False
     is_superuser: bool = False
     is_verified: bool = False

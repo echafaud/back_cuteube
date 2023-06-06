@@ -1,7 +1,7 @@
 import uuid
 from typing import Type, Dict, Any
 
-from sqlalchemy import select, Select
+from sqlalchemy import select, Select, delete, Delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.video.models import Video
@@ -37,3 +37,11 @@ class VideoDatabaseAdapter:
     async def _get_video(self, statement: Select):
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
+
+    async def remove(self, video: Video):
+        statement = delete(self.video_table).where(self.video_table.id == video.id)
+        await self._remove(statement)
+
+    async def _remove(self, statement: Delete):
+        await self.session.execute(statement)
+        await self.session.commit()
