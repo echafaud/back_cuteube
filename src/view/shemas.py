@@ -9,6 +9,7 @@ class BaseView(BaseModel):
     video_id: uuid.UUID
     stop_timecode: timedelta
     viewing_time: timedelta | None
+    fingerprint: str
 
     class Config:
         orm_mode = True
@@ -16,7 +17,6 @@ class BaseView(BaseModel):
 
 class ViewRead(BaseView):
     id: uuid.UUID
-    # fingerprint: str
     author_id: uuid.UUID | None
 
     def create_user_view_dict(self):

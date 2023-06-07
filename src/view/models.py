@@ -12,7 +12,7 @@ from src.database import Base
 class View(Base):
     __tablename__ = "view"
     id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
-    # fingervprint: Mapped[str] = mapped_column(String, nullable=False)
+    fingerprint: Mapped[str] = mapped_column(String, nullable=False)
     author_id: Mapped[UUID_ID] = mapped_column(GUID, ForeignKey("user.id"), nullable=True)
     video_id: Mapped[UUID_ID] = mapped_column(GUID, ForeignKey("video.id", ondelete='CASCADE'))
     stop_timecode: Mapped[INTERVAL] = mapped_column(INTERVAL)
