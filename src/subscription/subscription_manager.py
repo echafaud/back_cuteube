@@ -1,6 +1,6 @@
 import uuid
 
-from src.auth.models import User
+from src.user.models import User
 from src.subscription.shemas import BaseSubscription
 from src.subscription.subscription_database_adapter import SubscriptionDatabaseAdapter
 

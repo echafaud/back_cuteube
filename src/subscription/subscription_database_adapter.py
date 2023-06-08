@@ -4,7 +4,7 @@ from typing import Type, Dict, Any
 from sqlalchemy import delete, Delete, select, Select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.auth.models import User
+from src.user.models import User
 from src.subscription.models import Subscription
 from src.subscription.shemas import BaseSubscription
 

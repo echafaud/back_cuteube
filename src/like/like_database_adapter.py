@@ -5,7 +5,7 @@ from sqlalchemy import select, Select, delete, Delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.like.models import Like
-from src.auth.models import User
+from src.user.models import User
 from src.video.models import Video
 
 

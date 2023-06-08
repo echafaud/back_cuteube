@@ -5,7 +5,7 @@ from typing import Type, Dict, Any, Optional
 from sqlalchemy import select, Select, delete, Delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.auth.models import User
+from src.user.models import User
 from src.video.models import Video
 from src.view.models import View, UserView
 from src.view.shemas import ViewRead

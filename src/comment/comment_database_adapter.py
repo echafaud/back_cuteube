@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.comment.models import Comment
 from src.comment.shemas import CommentEdit
 from src.like.models import Like
-from src.auth.models import User
+from src.user.models import User
 from src.video.models import Video
 
 

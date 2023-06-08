@@ -12,13 +12,14 @@ from fastapi_users import exceptions, models
 from fastapi_users.manager import BaseUserManager
 from fastapi_users.router.common import ErrorCode
 
-from src.auth.auth import Settings, advanced_authentication_backend
-from src.auth.authenticator import Authenticator
-from src.auth.exceptions import LoginBadCredentials
-from src.auth.models import User
-from src.auth.shemas import UserRead, UserCreate, UserLogin
-from src.auth.auth import get_user_manager
-from src.auth.user_manager import UserManager
+from src.user.auth import Settings, advanced_authentication_backend
+from src.user.authenticator import Authenticator
+from src.user.endpoints import user_router
+from src.user.exceptions import LoginBadCredentials
+from src.user.models import User
+from src.user.shemas import UserRead, UserCreate, UserLogin
+from src.user.user import get_auth_user_manager, get_user_manager
+from src.user.auth_user_manager import AuthUserManager
 from src.comment.comment import get_comment_manager
 from src.comment.comment_manager import CommentManager
 from src.comment.shemas import CommentRead, BaseComment, CommentEdit, CommentCreate, CommentRemove
@@ -28,6 +29,7 @@ from src.like.shemas import BaseLike
 from src.subscription.shemas import BaseSubscription
 from src.subscription.subscription import get_subscription_manager
 from src.subscription.subscription_manager import SubscriptionManager
+from src.user.user_manager import UserManager
 from src.video.shemas import VideoUpload, VideoView
 from src.video.video import get_video_manager
 from src.video.video_manager import VideoManager
@@ -51,57 +53,12 @@ app.add_middleware(
                    "X-CSRF-Token"],
 )
 
+adv_auth = Authenticator(get_auth_user_manager, )
 
-@Authenticator.load_config
-def get_config():
-    return Settings()
+access_user = adv_auth.authenticate_current_user(token_type="access")
 
-
-@api_v1.method(result_model=UserRead)
-async def register(
-        user_create: UserCreate,
-        user_manager: UserManager = Depends(get_user_manager)
-):
-    created_user = await user_manager.create(user_create, safe=True)
-
-    return created_user
-
-
-@api_v1.method()
-async def login(response: Response,
-                credentials: UserLogin,
-                user_manager: UserManager = Depends(get_user_manager),
-                ) -> UserRead:
-    user = await user_manager.authenticate(credentials)
-    advanced_authentication_backend.advanced_login(response, user)
-    await user_manager.on_after_login(user)
-    return user
-
-
-# authenticator = Authenticator([auth_backend], get_user_manager)
-adv_auth = Authenticator(get_user_manager, )
-
-access_user = adv_auth.current_user(token_type="access")
-
-refresh_user = adv_auth.current_user(token_type="refresh")
-optional_access_user = adv_auth.current_user(token_type="access", optional=True)
-
-
-# curr_user = authenticator.current_user()
-
-
-@api_v1.method()
-async def logout(response: Response, user: User = Depends(access_user),
-                 user_manager: UserManager = Depends(get_user_manager),
-                 ):
-    advanced_authentication_backend.advanced_logout(response, user)
-    await user_manager.on_after_logout(user)
-
-
-@api_v1.method()
-async def refresh(response: Response, user: User = Depends(refresh_user),
-                  ):
-    return advanced_authentication_backend.refresh(response, user)
+refresh_user = adv_auth.authenticate_current_user(token_type="refresh")
+optional_access_user = adv_auth.authenticate_current_user(token_type="access", optional=True)
 
 
 @api_v1.method()
@@ -112,21 +69,6 @@ async def protected(user: User = Depends(access_user)) -> str:
 @api_v1.method()
 async def optional_protected(user: User = Depends(optional_access_user)) -> Optional[str]:
     return user.username
-
-
-@api_v1.method()
-async def get_user(id: uuid.UUID,
-                   user: User = Depends(optional_access_user),
-                   user_manager: UserManager = Depends(get_user_manager),
-                   subscription_manager: SubscriptionManager = Depends(get_subscription_manager)
-                   ) -> UserRead:
-    requested_user = await user_manager.get(id)
-    user_read = UserRead.from_orm(requested_user)
-    user_read.count_subscribers = await subscription_manager.count_user_subscribers(requested_user)
-    if user.id:
-        subscription = await subscription_manager.get_user_subscribed(user, requested_user)
-        user_read.is_subscribed = True if subscription else False
-    return user_read
 
 
 @app.post("/upload_video")
@@ -284,9 +226,10 @@ async def get_user_subscribers(
 
 @api_v1.method()
 async def count_user_subscribers(id: uuid.UUID,
-                                 user_manager: UserManager = Depends(get_user_manager),
+                                 user_manager: AuthUserManager = Depends(get_auth_user_manager),
                                  subscription_manager: SubscriptionManager = Depends(get_subscription_manager)) -> int:
     return await subscription_manager.count_user_subscribers(await user_manager.get(id))
 
 
 app.bind_entrypoint(api_v1)
+app.bind_entrypoint(user_router)

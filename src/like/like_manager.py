@@ -2,7 +2,7 @@ import uuid
 
 from src.like.like_database_adapter import LikeDatabaseAdapter
 from src.like.shemas import BaseLike
-from src.auth.models import User
+from src.user.models import User
 from src.video.models import Video
 from src.video.shemas import VideoView
 

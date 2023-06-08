@@ -4,7 +4,7 @@ from fastapi import Form, UploadFile, File
 from pydantic import BaseModel, PrivateAttr
 from pydantic.schema import timedelta
 
-from src.auth.models import User
+from src.user.models import User
 
 
 # class CreateUpdateDictModel(BaseModel):

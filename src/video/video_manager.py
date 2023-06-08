@@ -3,7 +3,7 @@ from typing import List
 
 from botocore.client import BaseClient
 
-from src.auth.models import User
+from src.user.models import User
 from src.video.exceptions import UploadVideoException, VideoNotExists
 from src.video.models import Video
 from src.video.shemas import VideoUpload, BaseVideo, VideoView

@@ -3,7 +3,7 @@ import uuid
 from src.comment.comment_database_adapter import CommentDatabaseAdapter
 from src.comment.shemas import BaseComment, CommentRead, CommentEdit, CommentRemove
 from src.like.shemas import BaseLike
-from src.auth.models import User
+from src.user.models import User
 from src.video.models import Video
 
 

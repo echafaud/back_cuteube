@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 
 from src.config import DB_HOST, DB_PORT, DB_USER, DB_NAME, DB_PASS
-from src.auth.models import *
+from src.user.models import *
 from src.video.models import *
 from src.like.models import *
 from src.comment.models import *

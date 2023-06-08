@@ -4,7 +4,6 @@ from typing import List
 
 from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTableUUID, GUID, UUID_ID
 from sqlalchemy import (TIMESTAMP, Boolean, String)
-# from database import metadata
 from sqlalchemy.orm import Mapped, mapped_column, relationship, backref
 
 from src.database import Base
@@ -14,8 +13,8 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     __tablename__ = "user"
 
     id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
-    name: Mapped[str] = mapped_column(String(length=30), nullable=False)
-    username: Mapped[str] = mapped_column(String(length=20), unique=True, index=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(length=256), nullable=False)
+    username: Mapped[str] = mapped_column(String(length=256), unique=True, index=True, nullable=False)
     registered_at: Mapped[TIMESTAMP] = mapped_column(TIMESTAMP, default=datetime.utcnow)
     email: Mapped[str] = mapped_column(
         String(length=320), index=True, nullable=False

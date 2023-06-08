@@ -5,7 +5,7 @@ from datetime import timedelta, datetime
 from fingerprint_pro_server_api_sdk import Response
 from fingerprint_pro_server_api_sdk.rest import ApiException
 
-from src.auth.models import User
+from src.user.models import User
 from src.video.models import Video
 from src.view.fingerprint import fingerprint_instance
 from src.view.shemas import BaseView, ViewRead, ViewRemove
