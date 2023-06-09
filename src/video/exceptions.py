@@ -3,13 +3,18 @@ from pydantic import BaseModel
 
 
 class UploadVideoException(jsonrpc.BaseError):
-    code = 5002
-    MESSAGE = "UploadVideoException"
+    CODE = 6000
+    MESSAGE = "Upload video exception"
 
     class DataModel(BaseModel):
         reason: str
 
 
 class VideoNotExists(jsonrpc.BaseError):
-    code = 5002
-    MESSAGE = "VideoNotExists"
+    CODE = 5000
+    MESSAGE = "Video not exists"
+
+
+class DeleteVideoException(jsonrpc.BaseError):
+    CODE = 5001
+    MESSAGE = "Failed to delete files from s3"

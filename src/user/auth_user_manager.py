@@ -97,15 +97,15 @@ class AuthUserManager:
             field_name: str,
             message: str,
             min_len: int = 2,
-            max_len: int = 256
+            max_len: int = 32
             ) -> None:
         if len(field) < min_len:
-            raise InvalidField(data={'details': f'{field_name} should beat least 2 characters'})
+            raise InvalidField(data={'details': f'{field_name} should beat least {min_len} characters'})
         elif re.search(re.compile(regex), field) is None:
             raise InvalidField(
                 data={'details': f'{field_name} {message}'})
         elif len(field) > max_len:
-            raise InvalidField(data={'details': f'{field_name} must contain no more than 256 characters'})
+            raise InvalidField(data={'details': f'{field_name} must contain no more than {max_len} characters'})
 
     async def on_after_logout(
             self,

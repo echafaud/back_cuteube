@@ -4,19 +4,6 @@ from fastapi import Form, UploadFile, File
 from pydantic import BaseModel, PrivateAttr
 from pydantic.schema import timedelta
 
-from src.user.models import User
-
-
-# class CreateUpdateDictModel(BaseModel):
-#     def create_update_dict(self):
-#         return self.dict(
-#             exclude_unset=True,
-#             exclude={
-#                 "id",
-#                 "upload_at"
-#             },
-#         )
-
 
 class BaseVideo(BaseModel):
     title: str

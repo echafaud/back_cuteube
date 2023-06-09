@@ -4,18 +4,18 @@ from typing import List, Optional
 import fastapi_jsonrpc as jsonrpc
 from pydantic import BaseModel
 from starlette.middleware.cors import CORSMiddleware
-from starlette.responses import Response
+from starlette.responses import Response, JSONResponse
 
 from fastapi import Depends, UploadFile, File
 
 from fastapi_users import exceptions, models
 from fastapi_users.manager import BaseUserManager
 from fastapi_users.router.common import ErrorCode
-
+from fastapi import Request
 from src.user.auth import Settings, advanced_authentication_backend
 from src.user.authenticator import Authenticator
 from src.user.endpoints import user_router
-from src.user.exceptions import LoginBadCredentials
+from src.user.exceptions import LoginBadCredentials, AccessDenied
 from src.user.models import User
 from src.user.shemas import UserRead, UserCreate, UserLogin
 from src.user.user import get_auth_user_manager, get_user_manager
@@ -30,6 +30,8 @@ from src.subscription.shemas import BaseSubscription
 from src.subscription.subscription import get_subscription_manager
 from src.subscription.subscription_manager import SubscriptionManager
 from src.user.user_manager import UserManager
+from src.video.endpoints import video_router
+from src.video.exceptions import UploadVideoException
 from src.video.shemas import VideoUpload, VideoView
 from src.video.video import get_video_manager
 from src.video.video_manager import VideoManager
@@ -43,6 +45,18 @@ api_v1 = jsonrpc.Entrypoint('/api/v1/jsonrpc')
 origins = [
     "http://localhost:5173",
 ]
+
+
+def error_handler(request: Request, exc: jsonrpc.BaseError):
+    content = exc.get_resp()
+    return JSONResponse(
+        status_code=200,
+        content=content,
+    )
+
+
+app.add_exception_handler(AccessDenied, error_handler)
+app.add_exception_handler(UploadVideoException, error_handler)
 
 app.add_middleware(
     CORSMiddleware,
@@ -69,73 +83,6 @@ async def protected(user: User = Depends(access_user)) -> str:
 @api_v1.method()
 async def optional_protected(user: User = Depends(optional_access_user)) -> Optional[str]:
     return user.username
-
-
-@app.post("/upload_video")
-async def upload_video(video: VideoUpload = Depends(),
-                       user: User = Depends(access_user),
-                       video_manager: VideoManager = Depends(get_video_manager)) -> str:
-    await video_manager.upload(video, user)
-    return video.title
-
-
-@api_v1.method()
-async def get_video(id: uuid.UUID,
-                    user: User = Depends(optional_access_user),
-                    video_manager: VideoManager = Depends(get_video_manager),
-                    view_manager: ViewManager = Depends(get_view_manager),
-                    like_manager: LikeManager = Depends(get_like_manager)
-                    ) -> VideoView:
-    video = await video_manager.get_video(id)
-    video_view = VideoView.from_orm(video)
-    video_view.likes = await like_manager.count_video_likes(video)
-    video_view.dislikes = await like_manager.count_video_dislikes(video)
-    video_view.views = await view_manager.count_video_views(video)
-    if user.id:
-        user_view = await view_manager.get_user_view(user, video)
-        if user_view:
-            video_view.stop_timecode = user_view.stop_timecode
-        like = await like_manager.get_rate(user, video)
-        video_view.like = like.status if like else like
-
-    return video_view
-
-
-@api_v1.method()
-async def get_video_link(id: uuid.UUID,
-                         video_manager: VideoManager = Depends(get_video_manager)) -> str:
-    return await video_manager.get_video_link(id)
-
-
-@api_v1.method()
-async def get_preview_link(id: uuid.UUID,
-                           video_manager: VideoManager = Depends(get_video_manager)) -> str:
-    return await video_manager.get_preview_link(id)
-
-
-@api_v1.method()
-async def get_latest_videos(limit: int = 10,
-                            video_manager: VideoManager = Depends(get_video_manager)) -> List[VideoView]:
-    return await video_manager.get_latest_videos(limit)
-
-
-@api_v1.method()
-async def get_liked_videos(limit: int = 10,
-                           user: User = Depends(access_user),
-                           video_manager: VideoManager = Depends(get_video_manager)) -> List[VideoView]:
-    return await video_manager.get_liked_videos(user, limit)
-
-
-@api_v1.method()
-async def get_video_likes(id: uuid.UUID, video_manager: VideoManager = Depends(get_video_manager)) -> int:
-    return await video_manager.get_video_likes(id)
-
-
-@api_v1.method()
-async def remove_video(id: uuid.UUID,
-                       user: User = Depends(access_user),
-                       video_manager: VideoManager = Depends(get_video_manager)):
-    await video_manager.delete(user, id)
 
 
 @api_v1.method()
@@ -177,7 +124,7 @@ async def remove_comment(id: uuid.UUID,
 async def get_video_comments(id: uuid.UUID,
                              video_manager: VideoManager = Depends(get_video_manager),
                              comment_manager: CommentManager = Depends(get_comment_manager)) -> List[CommentRead]:
-    video = await video_manager.get_video(id)
+    video = await video_manager.get(id)
     comments = await comment_manager.get_video_comments(video)
     return comments
 
@@ -233,3 +180,4 @@ async def count_user_subscribers(id: uuid.UUID,
 
 app.bind_entrypoint(api_v1)
 app.bind_entrypoint(user_router)
+app.bind_entrypoint(video_router)
