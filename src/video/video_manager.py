@@ -1,10 +1,11 @@
 import uuid
 from datetime import timedelta
 from typing import List, Optional, Any
-
+from io import BytesIO
 from botocore.client import BaseClient
 import filetype
 from botocore.exceptions import ClientError
+from fastapi import UploadFile
 
 from src.like.like_manager import LikeManager
 from src.user.exceptions import AccessDenied
@@ -69,9 +70,17 @@ class VideoManager:
                      user: User
                      ) -> VideoView:
 
+        # with BytesIO() as copied_file:
+        #     copied_file.write(await video._video_file.read())
+        #     video_media_info = MediaInfo.parse(UploadFile(copied_file).file)
+        #     preview_media_info = MediaInfo.parse(video._preview_file.file)
+        #     self._validate(video, video_media_info, preview_media_info)
+        #     await video._video_file.seek(0)
         video_media_info = MediaInfo.parse(video._video_file.file)
         preview_media_info = MediaInfo.parse(video._preview_file.file)
         self._validate(video, video_media_info, preview_media_info)
+        await video._video_file.seek(0)
+        await video._preview_file.seek(0)
 
         video_head = None
         video_id = uuid.uuid4()
@@ -93,10 +102,10 @@ class VideoManager:
             raise UploadVideoException(data={"reason": 'Failed to upload files to s3'})
 
         video = await self.video_db.create(video.dict()
-                                          | {'id': video_id,
-                                             "author": user.id,
-                                             "duration": timedelta(
-                                                 milliseconds=video_media_info.general_tracks[0].duration)})
+                                           | {'id': video_id,
+                                              "author": user.id,
+                                              "duration": timedelta(
+                                                  milliseconds=video_media_info.general_tracks[0].duration)})
         return VideoView.from_orm(video)
 
     async def get_video_link(self,
@@ -181,10 +190,10 @@ class VideoManager:
         elif len(video.description) > self.max_description_len:
             raise UploadVideoException(
                 data={"reason": f'Description must contain no more than {self.max_description_len} characters'})
-        elif not filetype.is_video(video._video_file.file):
-            raise UploadVideoException(data={"reason": 'Uploaded file is not a video'})
-        elif not filetype.is_image(video._preview_file.file):
-            raise UploadVideoException(data={"reason": 'Uploaded file is not a image'})
+        elif not video_media_info.video_tracks[0]:
+            raise UploadVideoException(data={"reason": 'Uploaded file is not a video or this format is not supported'})
+        elif not preview_media_info.image_tracks[0]:
+            raise UploadVideoException(data={"reason": 'Uploaded file is not a image or this format is not supported'})
         elif video_media_info.general_tracks[0].file_size / (1024 * 1024) > self.max_video_size:
             raise UploadVideoException(
                 data={"reason": f'Exceeded the maximum video size. Max.size = {self.max_video_size}mb'})
