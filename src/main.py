@@ -13,6 +13,7 @@ from fastapi_users.manager import BaseUserManager
 from fastapi_users.router.common import ErrorCode
 from fastapi import Request
 
+from src.comment.endpoints import comment_router
 from src.like.endpoints import like_router
 from src.user.auth import Settings, advanced_authentication_backend
 from src.user.authenticator import Authenticator
@@ -87,34 +88,7 @@ async def optional_protected(user: User = Depends(optional_access_user)) -> Opti
     return user.username
 
 
-@api_v1.method()
-async def post_comment(comment: CommentCreate,
-                       user: User = Depends(access_user),
-                       comment_manager: CommentManager = Depends(get_comment_manager)) -> CommentRead:
-    return await comment_manager.post(user, comment)
 
-
-@api_v1.method()
-async def edit_comment(comment: CommentEdit,
-                       user: User = Depends(access_user),
-                       comment_manager: CommentManager = Depends(get_comment_manager)) -> CommentRead:
-    return await comment_manager.edit(user, comment)
-
-
-@api_v1.method()
-async def remove_comment(id: uuid.UUID,
-                         user: User = Depends(access_user),
-                         comment_manager: CommentManager = Depends(get_comment_manager)):
-    await comment_manager.remove(user, id)
-
-
-@api_v1.method()
-async def get_video_comments(id: uuid.UUID,
-                             video_manager: VideoManager = Depends(get_video_manager),
-                             comment_manager: CommentManager = Depends(get_comment_manager)) -> List[CommentRead]:
-    video = await video_manager.get(id)
-    comments = await comment_manager.get_video_comments(video)
-    return comments
 
 
 @api_v1.method()
@@ -170,3 +144,4 @@ app.bind_entrypoint(api_v1)
 app.bind_entrypoint(user_router)
 app.bind_entrypoint(video_router)
 app.bind_entrypoint(like_router)
+app.bind_entrypoint(comment_router)

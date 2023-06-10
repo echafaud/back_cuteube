@@ -10,11 +10,11 @@ class UploadVideoException(jsonrpc.BaseError):
         reason: str
 
 
-class VideoNotExists(jsonrpc.BaseError):
-    CODE = 5000
-    MESSAGE = "Video not exists"
+class NonExistentVideo(jsonrpc.BaseError):
+    CODE = 6001
+    MESSAGE = "Video does not exist"
 
 
 class DeleteVideoException(jsonrpc.BaseError):
-    CODE = 5001
+    CODE = 6002
     MESSAGE = "Failed to delete files from s3"

@@ -10,7 +10,7 @@ from fastapi import UploadFile
 from src.like.like_manager import LikeManager
 from src.user.exceptions import AccessDenied
 from src.user.models import User
-from src.video.exceptions import UploadVideoException, VideoNotExists, DeleteVideoException
+from src.video.exceptions import UploadVideoException, NonExistentVideo, DeleteVideoException
 from src.video.models import Video
 from src.video.shemas import VideoUpload, BaseVideo, VideoView
 from src.config import BUCKET_NAME
@@ -46,7 +46,7 @@ class VideoManager:
                              ) -> VideoView:
         video = await self.video_db.get(id)
         if video is None:
-            raise VideoNotExists
+            raise NonExistentVideo
         return await self.convert_video_to_video_view(video, curren_user)
 
     async def convert_video_to_video_view(self,
@@ -113,7 +113,7 @@ class VideoManager:
                              ) -> str:
         video = await self.video_db.get(id)
         if video is None:
-            raise VideoNotExists
+            raise NonExistentVideo
         link = await self.s3.generate_presigned_url('get_object',
                                                     Params={'Bucket': BUCKET_NAME,
                                                             'Key': f'videos/{str(video.id)}'})
@@ -124,7 +124,7 @@ class VideoManager:
                                ) -> str:
         video = await self.video_db.get(id)
         if video is None:
-            raise VideoNotExists
+            raise NonExistentVideo
         link = await self.s3.generate_presigned_url('get_object',
                                                     Params={'Bucket': BUCKET_NAME,
                                                             'Key': f'previews/{str(video.id)}'})
@@ -153,7 +153,7 @@ class VideoManager:
                                 ) -> int:
         video = await self.video_db.get(id)
         if video is None:
-            raise VideoNotExists
+            raise NonExistentVideo
         return len(video.liked_users)
 
     async def delete(self,
@@ -161,7 +161,7 @@ class VideoManager:
                      id: uuid.UUID):
         video = await self.video_db.get(id)
         if video is None:
-            raise VideoNotExists
+            raise NonExistentVideo
         if video.author != user.id:
             raise AccessDenied
         try:
@@ -173,6 +173,12 @@ class VideoManager:
             raise DeleteVideoException
 
         await self.video_db.remove(video)
+
+    async def check_existing(self,
+                             video_id
+                             ) -> bool:
+        video = await self.video_db.get(video_id)
+        return True if video else False
 
     def _paginate(self,
                   limit,
