@@ -22,12 +22,7 @@ class ViewRead(BaseView):
     def create_user_view_dict(self):
         return self.dict(
             include={
-                'id': True,
                 'author_id': True,
                 'video_id': True,
             },
         )
-
-
-class ViewRemove(BaseModel):
-    video_id: uuid.UUID

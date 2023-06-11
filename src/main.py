@@ -38,7 +38,8 @@ from src.video.exceptions import UploadVideoException
 from src.video.shemas import VideoUpload, VideoView
 from src.video.video import get_video_manager
 from src.video.video_manager import VideoManager
-from src.view.shemas import BaseView, ViewRead, ViewRemove
+from src.view.endpoints import view_router
+from src.view.shemas import BaseView, ViewRead
 from src.view.view import get_view_manager
 from src.view.view_manager import ViewManager
 
@@ -88,23 +89,6 @@ async def optional_protected(user: User = Depends(optional_access_user)) -> Opti
     return user.username
 
 
-
-
-
-@api_v1.method()
-async def record_view(view: BaseView,
-                      user: User = Depends(optional_access_user),
-                      view_manager: ViewManager = Depends(get_view_manager)):
-    await view_manager.record_view(user, view)
-
-
-@api_v1.method()
-async def remove_view(view: ViewRemove,
-                      user: User = Depends(access_user),
-                      view_manager: ViewManager = Depends(get_view_manager)):
-    await view_manager.remove_user_view(user, view)
-
-
 @api_v1.method()
 async def subscribe(id: uuid.UUID,
                     user: User = Depends(access_user),
@@ -145,3 +129,4 @@ app.bind_entrypoint(user_router)
 app.bind_entrypoint(video_router)
 app.bind_entrypoint(like_router)
 app.bind_entrypoint(comment_router)
+app.bind_entrypoint(view_router)
