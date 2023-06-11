@@ -15,6 +15,7 @@ from fastapi import Request
 
 from src.comment.endpoints import comment_router
 from src.like.endpoints import like_router
+from src.subscription.endpoints import subscription_router
 from src.user.auth import Settings, advanced_authentication_backend
 from src.user.authenticator import Authenticator
 from src.user.endpoints import user_router
@@ -89,18 +90,6 @@ async def optional_protected(user: User = Depends(optional_access_user)) -> Opti
     return user.username
 
 
-@api_v1.method()
-async def subscribe(id: uuid.UUID,
-                    user: User = Depends(access_user),
-                    subscription_manager: SubscriptionManager = Depends(get_subscription_manager)):
-    await subscription_manager.subscribe(id, user)
-
-
-@api_v1.method()
-async def unsubscribe(id: uuid.UUID,
-                      user: User = Depends(access_user),
-                      subscription_manager: SubscriptionManager = Depends(get_subscription_manager)):
-    await subscription_manager.unsubscribe(id, user)
 
 
 @api_v1.method()
@@ -130,3 +119,4 @@ app.bind_entrypoint(video_router)
 app.bind_entrypoint(like_router)
 app.bind_entrypoint(comment_router)
 app.bind_entrypoint(view_router)
+app.bind_entrypoint(subscription_router)

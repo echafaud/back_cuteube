@@ -54,3 +54,9 @@ class UserManager:
                               user: User
                               ) -> None:
         await self.auth_manager.on_after_logout(user)
+
+    async def check_existing(self,
+                             user_id
+                             ) -> bool:
+        user = await self.user_db.get(user_id)
+        return True if user else False

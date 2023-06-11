@@ -73,7 +73,7 @@ async def get_liked_videos(limit: int = 20,
     return await video_manager.get_liked_videos(user, limit, pagination)
 
 
-@video_router.method()
+@video_router.method(tags=['video'])
 async def remove_video(id: uuid.UUID,
                        user: User = Depends(access_user),
                        video_manager: VideoManager = Depends(get_video_manager)
