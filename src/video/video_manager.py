@@ -139,6 +139,24 @@ class VideoManager:
         paginated_result = self._paginate(limit, pagination, latest_videos)
         return [await self.convert_video_to_video_view(video, current_user) for video in paginated_result]
 
+    async def get_liked_by_users(self,
+                                 current_user: User,
+                                 limit: int,
+                                 pagination: int
+                                 ):
+        popular_videos = await self.video_db.get_liked_by_users()
+        paginated_result = self._paginate(limit, pagination, popular_videos)
+        return [await self.convert_video_to_video_view(video, current_user) for video in paginated_result]
+
+    async def get_popular_videos(self,
+                                 current_user: User,
+                                 limit: int,
+                                 pagination: int,
+                                 ) -> List[VideoView]:
+        liked_videos = await self.video_db.get_popular_videos()
+        paginated_result = self._paginate(limit, pagination, liked_videos)
+        return [await self.convert_video_to_video_view(video, current_user) for video in paginated_result]
+
     async def get_liked_videos(self,
                                current_user: User,
                                limit: int,

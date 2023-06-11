@@ -3,9 +3,10 @@ from typing import Type, Dict, Any
 
 from sqlalchemy import select, Select, delete, Delete
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from sqlalchemy.sql.functions import count
 from src.user.models import User
 from src.video.models import Video
+from src.view.models import View
 
 
 class VideoDatabaseAdapter:
@@ -36,6 +37,19 @@ class VideoDatabaseAdapter:
 
     async def get_latest_videos(self):
         statement = select(self.video_table).order_by(self.video_table.upload_at.desc())
+        return await self._get_videos(statement)
+
+    async def get_liked_by_users(self):
+        statement = select(self.video_table).join(self.video_table.liked_users).group_by(self.video_table.id).order_by(
+            count().desc())
+        return await self._get_videos(statement)
+
+    async def get_popular_videos(self):
+        statement = select(self.video_table).join(self.video_table.models_views).where(
+            View.viewing_time != None).group_by(
+            self.video_table.id).order_by(
+            count().desc())
+        print(statement)
         return await self._get_videos(statement)
 
     async def get_liked_videos(self, current_user: User):
