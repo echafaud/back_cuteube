@@ -1,3 +1,4 @@
+from typing import List
 from uuid import UUID
 
 import fastapi_jsonrpc as jsonrpc
@@ -54,3 +55,18 @@ async def get_user(id: UUID,
                    user_manager: UserManager = Depends(get_user_manager),
                    ) -> UserRead:
     return await user_manager.get_user_read(id, user)
+
+
+@user_router.method(tags=['user'])
+async def get_subscribed(limit: int = 20,
+                         pagination: int = 0,
+                         user: User = Depends(access_user),
+                         user_manager: UserManager = Depends(get_user_manager),
+                         ) -> List[UserRead]:
+    return await user_manager.get_subscribed(limit, pagination, user)
+
+# @user_router.method(tags=['user'])
+# async def get_user_subscribers(
+#         user: User = Depends(access_user),
+#         subscription_manager: SubscriptionManager = Depends(get_subscription_manager)) -> List[UserRead]:
+#     return await subscription_manager.get_user_subscribers(user)

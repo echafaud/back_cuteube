@@ -54,3 +54,7 @@ class UserDatabaseAdapter(SQLAlchemyUserDatabase):
     async def _get_user(self, statement: Select) -> Optional[User]:
         results = await self.session.execute(statement)
         return results.unique().scalar_one_or_none()
+
+    async def get_user_relationship(self, relationship):
+        results = await self.session.scalars(relationship)
+        return results.all()

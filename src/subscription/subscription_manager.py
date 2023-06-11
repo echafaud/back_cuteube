@@ -37,15 +37,3 @@ class SubscriptionManager:
                                   subscriber: User,
                                   subscribed: User):
         return await self.subscription_db.get(subscriber.id, subscribed.id)
-
-    async def get_all_user_subscribed(self,
-                                      user: User):
-        return await self.subscription_db.get_all_subscribed(user)
-
-    async def get_user_subscribers(self,
-                                   user: User):
-        return await self.subscription_db.get_subscribers(user)
-
-    async def count_user_subscribers(self,
-                                     user: User):
-        return len(await self.get_user_subscribers(user))

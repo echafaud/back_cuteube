@@ -35,14 +35,6 @@ class SubscriptionDatabaseAdapter:
         await self.session.execute(statement)
         await self.session.commit()
 
-    async def get_all_subscribed(self, user: User):
-        users_subscribed = await self.session.scalars(user.subscribed)
-        return users_subscribed.all()
-
-    async def get_subscribers(self, user: User):
-        users_subscribers = await self.session.scalars(user.subscribers)
-        return users_subscribers.all()
-
     async def get(self, subscriber_id: UUID, subscribed_id: UUID):
         statement = select(self.subscription_table).where(
             self.subscription_table.subscriber == subscriber_id, self.subscription_table.subscribed == subscribed_id)

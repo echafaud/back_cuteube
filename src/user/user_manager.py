@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List, Any
 from uuid import UUID
 
 from src.subscription.subscription_manager import SubscriptionManager
@@ -26,13 +26,7 @@ class UserManager:
         requested_user = await self.user_db.get(user_id)
         if not requested_user:
             raise NonExistentUser
-        user_read = UserRead.from_orm(requested_user)
-        user_read.count_subscribers = await self.subscription_manager.count_user_subscribers(requested_user)
-        if current_user and current_user.id:
-            subscription = await self.subscription_manager.get_user_subscribed(current_user, requested_user)
-            user_read.is_subscribed = True if subscription else False
-        else:
-            user_read.is_subscribed = None
+        user_read = await self.convert_user_to_user_read(current_user, requested_user)
         return user_read
 
     async def create(self,
@@ -60,3 +54,38 @@ class UserManager:
                              ) -> bool:
         user = await self.user_db.get(user_id)
         return True if user else False
+
+    async def convert_user_to_user_read(self,
+                                        current_user: User,
+                                        requested_user: User,
+                                        ) -> UserRead:
+        user_read = UserRead.from_orm(requested_user)
+        user_read.count_subscribers = await self.count_subscribers(requested_user)
+        if current_user and current_user.id:
+            subscription = await self.subscription_manager.get_user_subscribed(current_user, requested_user)
+            user_read.is_subscribed = True if subscription else False
+        else:
+            user_read.is_subscribed = None
+        return user_read
+
+    async def get_subscribed(self,
+                             limit: int,
+                             pagination: int,
+                             user: User):
+        subscribed = await self.user_db.get_user_relationship(user.subscribed)
+        result = [await self.convert_user_to_user_read(user, subscribed_user) for subscribed_user in subscribed]
+        return self._paginate(limit, pagination, result)
+
+    async def get_subscribers(self,
+                              user: User):
+        return await self.user_db.get_user_relationship(user.subscribers)
+
+    async def count_subscribers(self,
+                                user: User):
+        return len(await self.get_subscribers(user))
+
+    def _paginate(self,
+                  limit,
+                  pagination,
+                  result) -> List[Any]:
+        return result[limit * pagination: limit * (pagination + 1)]

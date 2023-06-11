@@ -90,29 +90,6 @@ async def optional_protected(user: User = Depends(optional_access_user)) -> Opti
     return user.username
 
 
-
-
-@api_v1.method()
-async def get_all_user_subscribed(
-        user: User = Depends(access_user),
-        subscription_manager: SubscriptionManager = Depends(get_subscription_manager)) -> List[UserRead]:
-    return await subscription_manager.get_all_user_subscribed(user)
-
-
-@api_v1.method()
-async def get_user_subscribers(
-        user: User = Depends(access_user),
-        subscription_manager: SubscriptionManager = Depends(get_subscription_manager)) -> List[UserRead]:
-    return await subscription_manager.get_user_subscribers(user)
-
-
-@api_v1.method()
-async def count_user_subscribers(id: uuid.UUID,
-                                 user_manager: AuthUserManager = Depends(get_auth_user_manager),
-                                 subscription_manager: SubscriptionManager = Depends(get_subscription_manager)) -> int:
-    return await subscription_manager.count_user_subscribers(await user_manager.get(id))
-
-
 app.bind_entrypoint(api_v1)
 app.bind_entrypoint(user_router)
 app.bind_entrypoint(video_router)
