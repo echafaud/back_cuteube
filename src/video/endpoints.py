@@ -7,7 +7,10 @@ from fastapi import Depends
 from starlette.responses import JSONResponse
 
 from src.user.auth import access_user, optional_access_user
+from src.user.exceptions import NonExistentUser
 from src.user.models import User
+from src.user.user import get_user_manager
+from src.user.user_manager import UserManager
 from src.video.shemas import VideoUpload, VideoView
 from src.video.video import get_video_manager
 from src.video.video_manager import VideoManager
@@ -89,6 +92,57 @@ async def get_popular_videos(limit: int = 20,
                              video_manager: VideoManager = Depends(get_video_manager)
                              ) -> List[VideoView]:
     return await video_manager.get_popular_videos(user, limit, pagination)
+
+
+@video_router.method(tags=['video'])
+async def get_viewed_videos(limit: int = 20,
+                            pagination: int = 0,
+                            user: User = Depends(access_user),
+                            video_manager: VideoManager = Depends(get_video_manager)
+                            ) -> List[VideoView]:
+    return await video_manager.get_viewed_videos(user, limit, pagination)
+
+
+@video_router.method(tags=['video'])
+async def get_user_videos(id: UUID,
+                          limit: int = 20,
+                          pagination: int = 0,
+                          current_user: User = Depends(optional_access_user),
+                          user_manager: UserManager = Depends(get_user_manager),
+                          video_manager: VideoManager = Depends(get_video_manager)
+                          ) -> List[VideoView]:
+    requested_user = await user_manager.get(id)
+    if not requested_user:
+        raise NonExistentUser
+    return await video_manager.get_user_videos(current_user, requested_user, limit, pagination)
+
+
+@video_router.method(tags=['video'])
+async def get_latest_user_videos(id: UUID,
+                                 limit: int = 20,
+                                 pagination: int = 0,
+                                 current_user: User = Depends(optional_access_user),
+                                 user_manager: UserManager = Depends(get_user_manager),
+                                 video_manager: VideoManager = Depends(get_video_manager)
+                                 ) -> List[VideoView]:
+    requested_user = await user_manager.get(id)
+    if not requested_user:
+        raise NonExistentUser
+    return await video_manager.get_latest_user_videos(current_user, requested_user, limit, pagination)
+
+
+@video_router.method(tags=['video'])
+async def get_popular_user_videos(id: UUID,
+                                  limit: int = 20,
+                                  pagination: int = 0,
+                                  current_user: User = Depends(optional_access_user),
+                                  user_manager: UserManager = Depends(get_user_manager),
+                                  video_manager: VideoManager = Depends(get_video_manager)
+                                  ) -> List[VideoView]:
+    requested_user = await user_manager.get(id)
+    if not requested_user:
+        raise NonExistentUser
+    return await video_manager.get_popular_user_videos(current_user, requested_user, limit, pagination)
 
 
 @video_router.method(tags=['video'])

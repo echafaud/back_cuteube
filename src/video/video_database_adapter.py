@@ -49,12 +49,31 @@ class VideoDatabaseAdapter:
             View.viewing_time != None).group_by(
             self.video_table.id).order_by(
             count().desc())
-        print(statement)
         return await self._get_videos(statement)
 
     async def get_liked_videos(self, current_user: User):
         liked_videos = await self.session.scalars(current_user.liked_videos)
         return liked_videos.all()
+
+    async def get_viewed_videos(self, current_user: User):
+        viewed_videos = await self.session.scalars(current_user.viewed_videos)
+        return viewed_videos.all()
+
+    async def get_user_videos(self, requested_user: User):
+        videos = await self.session.scalars(requested_user.videos)
+        return videos.all()
+
+    async def get_latest_user_videos(self, requested_user):
+        statement = select(self.video_table).order_by(self.video_table.upload_at.desc()).where(
+            requested_user.id == self.video_table.author)
+        return await self._get_videos(statement)
+
+    async def get_popular_user_videos(self, requested_user):
+        statement = select(self.video_table).join(self.video_table.models_views).where(
+            View.viewing_time != None, requested_user.id == self.video_table.author).group_by(
+            self.video_table.id).order_by(
+            count().desc())
+        return await self._get_videos(statement)
 
     async def remove(self, video: Video):
         statement = delete(self.video_table).where(self.video_table.id == video.id)

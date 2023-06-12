@@ -21,9 +21,10 @@ async def record_view(view: BaseView,
                       view_manager: ViewManager = Depends(get_view_manager),
                       video_manager: VideoManager = Depends(get_video_manager)
                       ) -> None:
-    if not await video_manager.check_existing(view.video_id):
+    video = await video_manager.get(view.video_id)
+    if not video:
         raise NonExistentVideo
-    await view_manager.record_view(user, view)
+    await view_manager.record_view(user, view, video)
 
 
 @view_router.method(tags=['view'])

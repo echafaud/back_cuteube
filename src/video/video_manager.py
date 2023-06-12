@@ -144,8 +144,8 @@ class VideoManager:
                                  limit: int,
                                  pagination: int
                                  ):
-        popular_videos = await self.video_db.get_liked_by_users()
-        paginated_result = self._paginate(limit, pagination, popular_videos)
+        liked_by_users_videos = await self.video_db.get_liked_by_users()
+        paginated_result = self._paginate(limit, pagination, liked_by_users_videos)
         return [await self.convert_video_to_video_view(video, current_user) for video in paginated_result]
 
     async def get_popular_videos(self,
@@ -153,8 +153,8 @@ class VideoManager:
                                  limit: int,
                                  pagination: int,
                                  ) -> List[VideoView]:
-        liked_videos = await self.video_db.get_popular_videos()
-        paginated_result = self._paginate(limit, pagination, liked_videos)
+        popular_videos = await self.video_db.get_popular_videos()
+        paginated_result = self._paginate(limit, pagination, popular_videos)
         return [await self.convert_video_to_video_view(video, current_user) for video in paginated_result]
 
     async def get_liked_videos(self,
@@ -164,6 +164,41 @@ class VideoManager:
                                ) -> List[VideoView]:
         liked_videos = await self.video_db.get_liked_videos(current_user)
         paginated_result = self._paginate(limit, pagination, liked_videos)
+        return [await self.convert_video_to_video_view(video, current_user) for video in paginated_result]
+
+    async def get_viewed_videos(self, current_user: User,
+                                limit: int,
+                                pagination: int,
+                                ) -> List[VideoView]:
+        viewed_videos = await self.video_db.get_viewed_videos(current_user)
+        paginated_result = self._paginate(limit, pagination, viewed_videos)
+        return [await self.convert_video_to_video_view(video, current_user) for video in paginated_result]
+
+    async def get_user_videos(self, current_user: User,
+                              requested_user: User,
+                              limit: int,
+                              pagination: int,
+                              ) -> List[VideoView]:
+        user_videos = await self.video_db.get_user_videos(requested_user)
+        paginated_result = self._paginate(limit, pagination, user_videos)
+        return [await self.convert_video_to_video_view(video, current_user) for video in paginated_result]
+
+    async def get_latest_user_videos(self, current_user: User,
+                                     requested_user: User,
+                                     limit: int,
+                                     pagination: int,
+                                     ) -> List[VideoView]:
+        latest_user_videos = await self.video_db.get_latest_user_videos(requested_user)
+        paginated_result = self._paginate(limit, pagination, latest_user_videos)
+        return [await self.convert_video_to_video_view(video, current_user) for video in paginated_result]
+
+    async def get_popular_user_videos(self, current_user: User,
+                                      requested_user: User,
+                                      limit: int,
+                                      pagination: int,
+                                      ) -> List[VideoView]:
+        popular_user_videos = await self.video_db.get_popular_user_videos(requested_user)
+        paginated_result = self._paginate(limit, pagination, popular_user_videos)
         return [await self.convert_video_to_video_view(video, current_user) for video in paginated_result]
 
     async def count_video_likes(self,
@@ -214,9 +249,9 @@ class VideoManager:
         elif len(video.description) > self.max_description_len:
             raise UploadVideoException(
                 data={"reason": f'Description must contain no more than {self.max_description_len} characters'})
-        elif not video_media_info.video_tracks[0]:
+        elif not video_media_info.video_tracks:
             raise UploadVideoException(data={"reason": 'Uploaded file is not a video or this format is not supported'})
-        elif not preview_media_info.image_tracks[0]:
+        elif not preview_media_info.image_tracks:
             raise UploadVideoException(data={"reason": 'Uploaded file is not a image or this format is not supported'})
         elif video_media_info.general_tracks[0].file_size / (1024 * 1024) > self.max_video_size:
             raise UploadVideoException(

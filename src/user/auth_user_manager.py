@@ -23,14 +23,15 @@ class AuthUserManager:
             self,
             user_create: UserCreate,
             safe: bool = False,
-            ) -> User:
+    ) -> User:
         self.validate_password(user_create.password)
         self.base_field_validete(r'^[A-Za-z0-9_]*$', user_create.username,
                                  "Username", 'can contain only Latin letters, numbers and the symbol _')
         self.base_field_validete(r'^[а-яА-ЯёЁa-zA-Z0-9_]*$', user_create.name, "Name",
                                  'can contain only Cyrillic letters, Latin letters, numbers and the symbol _')
 
-        existing_user = await self.user_db.get_by_username(user_create.username)
+        existing_user = await self.user_db.get_by_username(user_create.username) or await self.user_db.get_by_email(
+            user_create.email)
         if existing_user is not None:
             raise UserAlreadyExists
 
@@ -52,7 +53,7 @@ class AuthUserManager:
     async def authenticate(
             self,
             credentials: UserLogin
-            ) -> User:
+    ) -> User:
         user = await self.user_db.get_by_email(credentials.username) or await self.user_db.get_by_username(
             credentials.username)
         if user is None:
@@ -75,7 +76,7 @@ class AuthUserManager:
     def validate_password(
             self,
             password: str,
-            ) -> None:
+    ) -> None:
         if len(password) < 8:
             raise InvalidPassword(data={'reason': 'Password should beat least 8 characters'})
         elif re.search('[0-9]', password) is None:
@@ -98,7 +99,7 @@ class AuthUserManager:
             message: str,
             min_len: int = 2,
             max_len: int = 32
-            ) -> None:
+    ) -> None:
         if len(field) < min_len:
             raise InvalidField(data={'details': f'{field_name} should beat least {min_len} characters'})
         elif re.search(re.compile(regex), field) is None:
@@ -110,17 +111,17 @@ class AuthUserManager:
     async def on_after_logout(
             self,
             user: User,
-            ) -> None:
+    ) -> None:
         await self.user_db.update(user, {"is_active": False})
 
     async def on_after_login(
             self,
             user: User,
-            ) -> None:
+    ) -> None:
         await self.user_db.update(user, {"is_active": True})
 
     async def on_after_register(
             self,
             user: User,
-            ) -> None:
+    ) -> None:
         return

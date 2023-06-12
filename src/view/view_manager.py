@@ -25,8 +25,9 @@ class ViewManager:
 
     async def record_view(self,
                           user: User,
-                          view: BaseView) -> None:
-        self._validate(view)
+                          view: BaseView,
+                          video: Video) -> None:
+        self._validate(view, video)
         try:
             visitor_visits: Response = fingerprint_instance.get_visits(view.fingerprint)
         except ApiException:
@@ -79,9 +80,14 @@ class ViewManager:
             return len(await self.view_db.get_viewer_video_views(view.fingerprint, view.video_id))
 
     def _validate(self,
-                  view: BaseView
+                  view: BaseView,
+                  video: Video
                   ) -> None:
         if view.viewing_time < timedelta(seconds=0):
             raise InvalidView(data={'reason': 'Viewed time cannot be negative'})
-        if view.stop_timecode < timedelta(seconds=0):
+        elif view.stop_timecode < timedelta(seconds=0):
             raise InvalidView(data={'reason': 'Stoptimecode cannot be negative'})
+        elif view.stop_timecode > video.duration:
+            raise InvalidView(data={'reason': 'Stoptimecode cannot be more than the duration of the video'})
+        elif view.viewing_time > video.duration:
+            raise InvalidView(data={'reason': 'Viewed time cannot be more than the duration of the video'})
