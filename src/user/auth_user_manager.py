@@ -1,9 +1,16 @@
+import uuid
+from uuid import UUID
+from datetime import timedelta
 from typing import Optional
 from fastapi_users.password import PasswordHelperProtocol, PasswordHelper
-from src.user.exceptions import UserAlreadyExists, InvalidPassword, LoginBadCredentials, InvalidField
+
+from src.redis_manager.redis_manager import RedisManager
+from src.user.exceptions import UserAlreadyExists, InvalidPassword, LoginBadCredentials, InvalidField, \
+    UserVerifyException
 from src.user.shemas import UserLogin, UserCreate
 from src.user.models import User
 from src.user.user_database_adapter import UserDatabaseAdapter
+from src.user.tasks import send_verify_mail
 import re
 
 
@@ -12,8 +19,10 @@ class AuthUserManager:
             self,
             user_db: UserDatabaseAdapter,
             password_helper: Optional[PasswordHelperProtocol] = None,
+            redis_manager: RedisManager = None,
     ):
         self.user_db = user_db
+        self.redis_manager = redis_manager
         if password_helper is None:
             self.password_helper = PasswordHelper()
         else:
@@ -73,6 +82,19 @@ class AuthUserManager:
 
         return user
 
+    async def verify(self, user: User, token: UUID):
+        verify_token = await self.redis_manager.get(f'verifyUser:{user.id}:UUID', execute=True)
+        if not verify_token[0]:
+            raise UserVerifyException(data={'reason': 'Link has expired'})
+        if verify_token[0].decode('utf-8') != str(token):
+            raise UserVerifyException(data={'reason': 'Invalid verification token'})
+
+    async def update_verify(self, user: User):
+        exp_time = await self.redis_manager.get_time_exp(f'verifyUser:{user.id}:UUID', execute=True)
+        if timedelta(seconds=exp_time[0]) > timedelta(minutes=14):
+            raise UserVerifyException(data={'reason': 'You can\'t update the link right away'})
+        await self.on_after_register(user)
+
     def validate_password(
             self,
             password: str,
@@ -120,8 +142,10 @@ class AuthUserManager:
     ) -> None:
         await self.user_db.update(user, {"is_active": True})
 
-    async def on_after_register(
-            self,
-            user: User,
-    ) -> None:
-        return
+    async def on_after_register(self,
+                                user: User,
+                                ) -> None:
+        token = str(uuid.uuid4())
+        await self.redis_manager.set(f'verifyUser:{user.id}:UUID', token, timedelta(minutes=15), execute=True)
+        user_data = {'id': user.id, 'username': user.username, 'email': user.email, 'token': token}
+        send_verify_mail.delay(user_data)

@@ -1,9 +1,10 @@
 from typing import Optional, List, Any
 from uuid import UUID
 
+from src.celery_main import celery
 from src.subscription.subscription_manager import SubscriptionManager
 from src.user.auth_user_manager import AuthUserManager
-from src.user.exceptions import NonExistentUser
+from src.user.exceptions import NonExistentUser, UserVerifyException
 from src.user.models import User
 from src.user.shemas import UserCreate, UserLogin, UserRead
 
@@ -38,6 +39,28 @@ class UserManager:
                            credentials: UserLogin
                            ) -> User:
         return await self.auth_manager.authenticate(credentials)
+
+    async def verify(self,
+                     user_id: UUID,
+                     token: UUID
+                     ) -> None:
+        user = await self.get(user_id)
+        if not user:
+            raise NonExistentUser
+        if user.is_verified:
+            raise UserVerifyException(data={'reason': 'User has already been verified'})
+        await self.auth_manager.verify(user, token)
+        await self.user_db.update(user, {'is_verified': True})
+
+    async def update_verify(self,
+                            user_id: UUID
+                            ) -> None:
+        user = await self.get(user_id)
+        if not user:
+            raise NonExistentUser
+        if user.is_verified:
+            raise UserVerifyException(data={'reason': 'User has already been verified'})
+        await self.auth_manager.update_verify(user)
 
     async def on_after_login(self,
                              user: User

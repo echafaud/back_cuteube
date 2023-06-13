@@ -6,6 +6,7 @@ from fastapi import Depends
 from starlette.responses import Response
 
 from src.user.auth import advanced_authentication_backend, access_user, refresh_user, optional_access_user
+from src.user.exceptions import NonExistentUser, UserVerifyException
 from src.user.models import User
 from src.user.shemas import UserCreate, UserRead, UserLogin
 from src.user.user import get_user_manager
@@ -47,6 +48,21 @@ async def refresh(response: Response,
                   user: User = Depends(refresh_user),
                   ) -> None:
     return advanced_authentication_backend.refresh(response, user)
+
+
+@user_router.method(tags=['user'])
+async def verify(id: UUID,
+                 token: UUID,
+                 user_manager: UserManager = Depends(get_user_manager),
+                 ) -> None:
+    await user_manager.verify(id, token)
+
+
+@user_router.method(tags=['user'])
+async def update_verify(id: UUID,
+                        user_manager: UserManager = Depends(get_user_manager),
+                        ) -> None:
+    await user_manager.update_verify(id)
 
 
 @user_router.method(tags=['user'])

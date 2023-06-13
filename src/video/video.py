@@ -6,7 +6,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config import BOTO_SERVICE_NAME, BOTO_ENDPOINT_URL, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
-from src.database import get_async_session
+from src.database import get_async_db_session
 from src.like.like import get_like_manager
 from src.like.like_manager import LikeManager
 from src.video.models import Video
@@ -28,7 +28,7 @@ async def get_async_s3_session():
         yield session
 
 
-async def get_video_db(db_session=Depends(get_async_session)):
+async def get_video_db(db_session=Depends(get_async_db_session)):
     yield VideoDatabaseAdapter(db_session, Video)
 
 

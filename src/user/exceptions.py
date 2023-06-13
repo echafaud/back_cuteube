@@ -44,3 +44,11 @@ class AccessDenied(jsonrpc.BaseError):
 class NonExistentUser(jsonrpc.BaseError):
     CODE = 5006
     MESSAGE = "User does not exist"
+
+
+class UserVerifyException(jsonrpc.BaseError):
+    CODE = 5007
+    MESSAGE = "Error occurred during verification"
+
+    class DataModel(BaseModel):
+        reason: str
