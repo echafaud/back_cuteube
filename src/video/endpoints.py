@@ -6,11 +6,15 @@ import fastapi_jsonrpc as jsonrpc
 from fastapi import Depends
 from starlette.responses import JSONResponse
 
+from src.subscription.subscription import get_subscription_manager
+from src.subscription.subscription_manager import SubscriptionManager
 from src.user.auth import access_user, optional_access_user
 from src.user.exceptions import NonExistentUser
 from src.user.models import User
+from src.user.shemas import UserRead
 from src.user.user import get_user_manager
 from src.user.user_manager import UserManager
+from src.video.exceptions import NonExistentVideo
 from src.video.shemas import VideoUpload, VideoView
 from src.video.video import get_video_manager
 from src.video.video_manager import VideoManager
@@ -40,22 +44,45 @@ async def upload_video(video: VideoUpload = Depends(),
 async def get_video(id: UUID,
                     user: User = Depends(optional_access_user),
                     video_manager: VideoManager = Depends(get_video_manager),
+                    subscription_manager: SubscriptionManager = Depends(get_subscription_manager),
                     ) -> VideoView:
-    return await video_manager.get_video_view(id, user)
+    video = await video_manager.get(id)
+    if video is None:
+        raise NonExistentVideo
+    if user.id:
+        user = UserRead.from_orm(user)
+        user.is_subscribed = await subscription_manager.check_subscription(user.id, video.author)
+    return await video_manager.get_video_view(video, user)
 
 
 @video_router.method(tags=['video'])
 async def get_video_link(id: uuid.UUID,
-                         video_manager: VideoManager = Depends(get_video_manager)
+                         user: User = Depends(optional_access_user),
+                         video_manager: VideoManager = Depends(get_video_manager),
+                         subscription_manager: SubscriptionManager = Depends(get_subscription_manager),
                          ) -> str:
-    return await video_manager.get_video_link(id)
+    video = await video_manager.get(id)
+    if video is None:
+        raise NonExistentVideo
+    if user.id:
+        user = UserRead.from_orm(user)
+        user.is_subscribed = await subscription_manager.check_subscription(user.id, video.author)
+    return await video_manager.get_video_link(video, user)
 
 
 @video_router.method(tags=['video'])
 async def get_preview_link(id: uuid.UUID,
-                           video_manager: VideoManager = Depends(get_video_manager)
+                           user: User = Depends(optional_access_user),
+                           video_manager: VideoManager = Depends(get_video_manager),
+                           subscription_manager: SubscriptionManager = Depends(get_subscription_manager),
                            ) -> str:
-    return await video_manager.get_preview_link(id)
+    video = await video_manager.get(id)
+    if video is None:
+        raise NonExistentVideo
+    if user.id:
+        user = UserRead.from_orm(user)
+        user.is_subscribed = await subscription_manager.check_subscription(user.id, video.author)
+    return await video_manager.get_preview_link(video, user)
 
 
 @video_router.method(tags=['video'])

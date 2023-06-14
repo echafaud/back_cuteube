@@ -3,8 +3,12 @@ from uuid import UUID
 import fastapi_jsonrpc as jsonrpc
 from fastapi import Depends
 
+from src.subscription.subscription import get_subscription_manager
+from src.subscription.subscription_manager import SubscriptionManager
 from src.user.auth import optional_access_user, access_user
+from src.user.exceptions import AccessDenied
 from src.user.models import User
+from src.user.shemas import UserRead
 from src.video.exceptions import NonExistentVideo
 from src.video.video import get_video_manager
 from src.video.video_manager import VideoManager
@@ -19,11 +23,18 @@ view_router = jsonrpc.Entrypoint(path='/api/v1/view')
 async def record_view(view: BaseView,
                       user: User = Depends(optional_access_user),
                       view_manager: ViewManager = Depends(get_view_manager),
-                      video_manager: VideoManager = Depends(get_video_manager)
+                      video_manager: VideoManager = Depends(get_video_manager),
+                      subscription_manager: SubscriptionManager = Depends(get_subscription_manager),
                       ) -> None:
     video = await video_manager.get(view.video_id)
     if not video:
         raise NonExistentVideo
+    user_read = user
+    if user.id:
+        user_read = UserRead.from_orm(user)
+        user_read.is_subscribed = await subscription_manager.check_subscription(user_read.id, video.author)
+    if video.permission not in video_manager.get_permissions(user_read, video.author):
+        raise AccessDenied
     await view_manager.record_view(user, view, video)
 
 

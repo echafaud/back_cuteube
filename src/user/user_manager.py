@@ -85,8 +85,8 @@ class UserManager:
         user_read = UserRead.from_orm(requested_user)
         user_read.count_subscribers = await self.count_subscribers(requested_user)
         if current_user and current_user.id:
-            subscription = await self.subscription_manager.get_user_subscribed(current_user, requested_user)
-            user_read.is_subscribed = True if subscription else False
+            user_read.is_subscribed = await self.subscription_manager.check_subscription(current_user.id,
+                                                                                         requested_user.id)
         else:
             user_read.is_subscribed = None
         return user_read

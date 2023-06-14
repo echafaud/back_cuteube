@@ -18,3 +18,8 @@ class NonExistentVideo(jsonrpc.BaseError):
 class DeleteVideoException(jsonrpc.BaseError):
     CODE = 6002
     MESSAGE = "Failed to delete files from s3"
+
+
+class NonExistentPermission(jsonrpc.BaseError):
+    CODE = 6001
+    MESSAGE = "Permission does not exist"

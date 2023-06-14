@@ -4,10 +4,13 @@ from fastapi import Form, UploadFile, File
 from pydantic import BaseModel, PrivateAttr
 from pydantic.schema import timedelta
 
+from src.video.models import Permission
+
 
 class BaseVideo(BaseModel):
     title: str
     description: str
+    permission: str
 
     class Config:
         orm_mode = True
@@ -21,9 +24,12 @@ class VideoUpload(BaseVideo):
     # upload_at
     # author: uuid.UUID
 
-    def __init__(self, title: str = Form(...), description: str = Form(...), video_file: UploadFile = File(...),
+    def __init__(self, title: str = Form(...),
+                 description: str = Form(...),
+                 permission: str = Form(...),
+                 video_file: UploadFile = File(...),
                  preview_file: UploadFile = File(...)):
-        super().__init__(**{"title": title, "description": description})
+        super().__init__(**{"title": title, "description": description, 'permission': permission})
         # self.title = title
         # self.description = description
         self._video_file = video_file
@@ -38,3 +44,4 @@ class VideoView(BaseVideo):
     dislikes: int = 0
     stop_timecode: timedelta = 0
     like: bool | None
+    permission: str

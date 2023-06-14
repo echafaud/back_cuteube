@@ -37,3 +37,8 @@ class SubscriptionManager:
                                   subscriber: User,
                                   subscribed: User):
         return await self.subscription_db.get(subscriber.id, subscribed.id)
+
+    async def check_subscription(self,
+                                 subscriber: UUID,
+                                 subscribed: UUID):
+        return True if await self.subscription_db.get(subscriber, subscribed) else False
