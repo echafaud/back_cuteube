@@ -36,6 +36,7 @@ advanced_authentication_backend = AdvancedAuthenticationBackend(token_manager)
 adv_auth = Authenticator(get_user_manager)
 
 access_user = adv_auth.authenticate_current_user(token_type="access")
+access_superuser = adv_auth.authenticate_current_user(token_type="access", superuser=True)
 
 refresh_user = adv_auth.authenticate_current_user(token_type="refresh")
 optional_access_user = adv_auth.authenticate_current_user(token_type="access", optional=True)

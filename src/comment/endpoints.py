@@ -9,7 +9,7 @@ from src.comment.comment_manager import CommentManager
 from src.comment.shemas import CommentCreate, CommentRead, CommentEdit
 from src.subscription.subscription import get_subscription_manager
 from src.subscription.subscription_manager import SubscriptionManager
-from src.user.auth import access_user, optional_access_user
+from src.user.auth import access_user, optional_access_user, access_superuser
 from src.user.exceptions import AccessDenied
 from src.user.models import User
 from src.user.shemas import UserRead
@@ -51,6 +51,13 @@ async def remove_comment(id: UUID,
                          user: User = Depends(access_user),
                          comment_manager: CommentManager = Depends(get_comment_manager)):
     await comment_manager.remove(user, id)
+
+
+@comment_router.method(tags=['comment'])
+async def admin_remove_comment(id: UUID,
+                               user: User = Depends(access_superuser),
+                               comment_manager: CommentManager = Depends(get_comment_manager)):
+    await comment_manager.admin_remove(user, id)
 
 
 @comment_router.method(tags=['comment'])

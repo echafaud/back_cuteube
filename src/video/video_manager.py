@@ -76,6 +76,8 @@ class VideoManager:
         #     preview_media_info = MediaInfo.parse(video._preview_file.file)
         #     self._validate(video, video_media_info, preview_media_info)
         #     await video._video_file.seek(0)
+        if not user.is_verified:
+            raise AccessDenied
         video_media_info = MediaInfo.parse(video._video_file.file)
         preview_media_info = MediaInfo.parse(video._preview_file.file)
         self._validate(video, video_media_info, preview_media_info)
@@ -225,19 +227,18 @@ class VideoManager:
                      user: User,
                      id: UUID):
         video = await self.video_db.get(id)
-        if video is None:
-            raise NonExistentVideo
-        if video.author != user.id:
-            raise AccessDenied
-        try:
-            video_response = await self.s3.delete_object(Bucket=BUCKET_NAME, Key=f'videos/{str(video.id)}')
-            preview_response = await self.s3.delete_object(Bucket=BUCKET_NAME, Key=f'previews/{str(video.id)}')
-            if not video_response["DeleteMarker"] or not preview_response["DeleteMarker"]:
-                raise DeleteVideoException
-        except ClientError:
-            raise DeleteVideoException
+        self.check_access(video, user)
+        await self._delete(video)
 
-        await self.video_db.remove(video)
+    async def admin_delete(self,
+                           user: User,
+                           id: UUID):
+        video = await self.video_db.get(id)
+        try:
+            self.check_access(video, user)
+        except AccessDenied:
+            pass
+        await self._delete(video)
 
     async def check_existing(self,
                              video_id
@@ -258,6 +259,36 @@ class VideoManager:
         if video_author and current_user.id == video_author:
             current_permissions.append(Permission.for_myself)
         return current_permissions
+
+    def check_access(self, video: Video, current_user: User):
+        if video is None:
+            raise NonExistentVideo
+        if video.author != current_user.id:
+            raise AccessDenied
+
+    async def _delete(self, video: Video):
+        try:
+            await self.s3.delete_object(Bucket=BUCKET_NAME, Key=f'videos/{str(video.id)}')
+        except ClientError:
+            raise DeleteVideoException
+        try:
+            await self.s3.head_object(Bucket=BUCKET_NAME, Key=f'videos/{str(video.id)}')
+        except ClientError:
+            pass
+        else:
+            raise DeleteVideoException
+        try:
+            await self.s3.delete_object(Bucket=BUCKET_NAME, Key=f'previews/{str(video.id)}')
+        except ClientError:
+            raise DeleteVideoException
+        try:
+            await self.s3.head_object(Bucket=BUCKET_NAME, Key=f'previews/{str(video.id)}')
+        except ClientError:
+            pass
+        else:
+            raise DeleteVideoException
+
+        await self.video_db.remove(video)
 
     def _paginate(self,
                   limit,

@@ -8,7 +8,7 @@ from starlette.responses import JSONResponse
 
 from src.subscription.subscription import get_subscription_manager
 from src.subscription.subscription_manager import SubscriptionManager
-from src.user.auth import access_user, optional_access_user
+from src.user.auth import access_user, optional_access_user, access_superuser
 from src.user.exceptions import NonExistentUser
 from src.user.models import User
 from src.user.shemas import UserRead
@@ -178,3 +178,11 @@ async def remove_video(id: uuid.UUID,
                        video_manager: VideoManager = Depends(get_video_manager)
                        ) -> None:
     await video_manager.delete(user, id)
+
+
+@video_router.method(tags=['video'])
+async def admin_remove_video(id: uuid.UUID,
+                             user: User = Depends(access_superuser),
+                             video_manager: VideoManager = Depends(get_video_manager)
+                             ) -> None:
+    await video_manager.admin_delete(user, id)
