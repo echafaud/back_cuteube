@@ -4,7 +4,7 @@ from typing import List, Any
 from src.comment.comment_database_adapter import CommentDatabaseAdapter
 from src.comment.exceptions import InvalidComment, NonExistentComment
 from src.comment.models import Comment
-from src.comment.shemas import BaseComment, CommentRead, CommentEdit, CommentRemove
+from src.comment.shemas import BaseComment, CommentRead, CommentEdit
 from src.like.shemas import BaseLike
 from src.user.exceptions import AccessDenied
 from src.user.models import User
@@ -35,7 +35,7 @@ class CommentManager:
         comment_model = await self.comment_db.get(comment.id)
         if not comment_model:
             raise NonExistentComment
-        if user.id != comment_model.author_id:
+        if user.id != comment_model.owner_id:
             raise AccessDenied
         return await self.comment_db.edit(comment_model, comment.text)
 
@@ -69,7 +69,7 @@ class CommentManager:
     def check_access(self, comment: Comment, current_user: User):
         if not comment:
             raise NonExistentComment
-        if current_user.id != comment.author_id:
+        if current_user.id != comment.owner_id:
             raise AccessDenied
 
     def _validate(self, text: str):

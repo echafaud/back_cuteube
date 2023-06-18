@@ -20,7 +20,7 @@ class LikeDatabaseAdapter:
 
     async def create(self, create_dict: Dict[str, Any], user_id: uuid.UUID):
         like = self.like_table(**create_dict)
-        like.user_id = user_id
+        like.owner_id = user_id
         self.session.add(like)
         await self.session.commit()
         return like
@@ -31,7 +31,7 @@ class LikeDatabaseAdapter:
 
     async def get(self, user_id: uuid.UUID, video_id: uuid.UUID):
         statement = select(self.like_table).filter(
-            self.like_table.user_id == user_id, self.like_table.video_id == video_id)
+            self.like_table.owner_id == user_id, self.like_table.video_id == video_id)
         return await self._get(statement)
 
     async def _get(self, statement: Select):
@@ -40,7 +40,7 @@ class LikeDatabaseAdapter:
 
     async def remove(self, user_id: uuid.UUID, video_id: uuid.UUID):
         statement = delete(self.like_table).where(
-            self.like_table.user_id == user_id, self.like_table.video_id == video_id)
+            self.like_table.owner_id == user_id, self.like_table.video_id == video_id)
         await self._remove(statement)
 
     async def _remove(self, statement: Delete):

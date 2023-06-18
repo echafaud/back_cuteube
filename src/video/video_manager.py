@@ -43,7 +43,7 @@ class VideoManager:
                              video: Video,
                              current_user: Union[User, UserRead] = None,
                              ) -> VideoView:
-        current_user_permissions = self.get_permissions(current_user, video.author)
+        current_user_permissions = self.get_permissions(current_user, video.owner)
         if video.permission not in current_user_permissions:
             raise AccessDenied
         return await self.convert_video_to_video_view(video, current_user)
@@ -105,7 +105,7 @@ class VideoManager:
 
         video = await self.video_db.create(video.dict()
                                            | {'id': video_id,
-                                              "author": user.id,
+                                              "owner": user.id,
                                               'permission': Permission[video.permission],
                                               "duration": timedelta(
                                                   milliseconds=video_media_info.general_tracks[0].duration)})
@@ -116,7 +116,7 @@ class VideoManager:
                              video: Video,
                              current_user: UserRead
                              ) -> str:
-        current_user_permissions = self.get_permissions(current_user, video.author)
+        current_user_permissions = self.get_permissions(current_user, video.owner)
         if video.permission not in current_user_permissions:
             raise AccessDenied
         link = await self.s3.generate_presigned_url('get_object',
@@ -128,7 +128,7 @@ class VideoManager:
                                video: Video,
                                current_user: UserRead
                                ) -> str:
-        current_user_permissions = self.get_permissions(current_user, video.author)
+        current_user_permissions = self.get_permissions(current_user, video.owner)
         if video.permission not in current_user_permissions:
             raise AccessDenied
         link = await self.s3.generate_presigned_url('get_object',
@@ -263,7 +263,7 @@ class VideoManager:
     def check_access(self, video: Video, current_user: User):
         if video is None:
             raise NonExistentVideo
-        if video.author != current_user.id:
+        if video.owner != current_user.id:
             raise AccessDenied
 
     async def _delete(self, video: Video):

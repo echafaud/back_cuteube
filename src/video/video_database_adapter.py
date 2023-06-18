@@ -40,7 +40,7 @@ class VideoDatabaseAdapter:
         return await self._get_video(statement)
 
     async def get_latest_videos(self, user_permissions: List[Permission], user: User):
-        statement = self.get_permission_select(user, user_permissions).order_by(self.video_table.upload_at.desc())
+        statement = self.get_permission_select(user, user_permissions).order_by(self.video_table.uploaded_at.desc())
         return await self._get_videos(statement)
 
     async def get_liked_by_users(self, user_permissions: List[Permission], user: User):
@@ -66,14 +66,13 @@ class VideoDatabaseAdapter:
 
     async def get_user_videos(self, requested_user: User, user_permissions: List[Permission], current_user: User):
         statement = self.get_permission_select(current_user, user_permissions, requested_user.videos)
-        print(statement)
         return await self._get_videos(statement)
 
     async def get_latest_user_videos(self, requested_user: User,
                                      user_permissions: List[Permission],
                                      current_user: User):
         statement = self.get_permission_select(current_user, user_permissions, requested_user.videos).order_by(
-            self.video_table.upload_at.desc())
+            self.video_table.uploaded_at.desc())
         # statement = select(self.video_table).order_by(self.video_table.upload_at.desc()).where(
         #     requested_user.id == self.video_table.author)
         return await self._get_videos(statement)
@@ -112,9 +111,9 @@ class VideoDatabaseAdapter:
         return selected \
             .where(or_(self.video_table.permission.in_(user_permissions),
                        and_(self.video_table.permission == Permission.for_myself,
-                            self.video_table.author == user.id),
+                            self.video_table.owner == user.id),
                        and_(self.video_table.permission == Permission.for_subscribers,
-                            or_(user.id == self.video_table.author,
+                            or_(user.id == self.video_table.owner,
                                 and_(Subscription.subscriber == user.id,
-                                     Subscription.subscribed == self.video_table.author),
+                                     Subscription.subscribed == self.video_table.owner),
                                 ))))

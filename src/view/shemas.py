@@ -17,12 +17,12 @@ class BaseView(BaseModel):
 
 class ViewRead(BaseView):
     id: uuid.UUID
-    author_id: uuid.UUID | None
+    owner_id: uuid.UUID | None
 
     def create_user_view_dict(self):
         return self.dict(
             include={
-                'author_id': True,
+                'owner_id': True,
                 'video_id': True,
             },
         )

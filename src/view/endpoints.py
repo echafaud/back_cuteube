@@ -32,8 +32,8 @@ async def record_view(view: BaseView,
     user_read = user
     if user.id:
         user_read = UserRead.from_orm(user)
-        user_read.is_subscribed = await subscription_manager.check_subscription(user_read.id, video.author)
-    if video.permission not in video_manager.get_permissions(user_read, video.author):
+        user_read.is_subscribed = await subscription_manager.check_subscription(user_read.id, video.owner)
+    if video.permission not in video_manager.get_permissions(user_read, video.owner):
         raise AccessDenied
     await view_manager.record_view(user, view, video)
 

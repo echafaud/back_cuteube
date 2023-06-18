@@ -31,7 +31,7 @@ async def upload_video(video: VideoUpload = Depends(),
     result = video.dict()
     content = {
         'jsonrpc': '2.0',
-        'result': result | {"id": str(result["id"]), "author": str(result["author"])},
+        'result': result | {"id": str(result["id"]), "owner": str(result["owner"])},
         'id': None
     }
     return JSONResponse(
@@ -51,7 +51,7 @@ async def get_video(id: UUID,
         raise NonExistentVideo
     if user.id:
         user = UserRead.from_orm(user)
-        user.is_subscribed = await subscription_manager.check_subscription(user.id, video.author)
+        user.is_subscribed = await subscription_manager.check_subscription(user.id, video.owner)
     return await video_manager.get_video_view(video, user)
 
 
@@ -66,7 +66,7 @@ async def get_video_link(id: uuid.UUID,
         raise NonExistentVideo
     if user.id:
         user = UserRead.from_orm(user)
-        user.is_subscribed = await subscription_manager.check_subscription(user.id, video.author)
+        user.is_subscribed = await subscription_manager.check_subscription(user.id, video.owner)
     return await video_manager.get_video_link(video, user)
 
 
@@ -81,7 +81,7 @@ async def get_preview_link(id: uuid.UUID,
         raise NonExistentVideo
     if user.id:
         user = UserRead.from_orm(user)
-        user.is_subscribed = await subscription_manager.check_subscription(user.id, video.author)
+        user.is_subscribed = await subscription_manager.check_subscription(user.id, video.owner)
     return await video_manager.get_preview_link(video, user)
 
 

@@ -1,0 +1,3 @@
+FROM back_app:v1
+
+ENTRYPOINT /video_hosting/docker/celery.sh

@@ -1,7 +1,8 @@
 import os
+
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv('.env-prod')
 
 DB_HOST = os.environ.get("DB_HOST")
 DB_PORT = os.environ.get("DB_PORT")
@@ -22,3 +23,5 @@ SMTP_HOST = os.environ.get("SMTP_HOST")
 SMTP_PORT = os.environ.get("SMTP_PORT")
 SMTP_LOGIN = os.environ.get("SMTP_LOGIN")
 SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD")
+ORIGINS = os.environ.get("ORIGINS").split(',')
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")

@@ -2,7 +2,7 @@ import smtplib
 from email.message import EmailMessage
 
 from src.celery_main import celery
-from src.config import SMTP_HOST, SMTP_PORT, SMTP_LOGIN, SMTP_PASSWORD
+from src.config import SMTP_HOST, SMTP_PORT, SMTP_LOGIN, SMTP_PASSWORD, ORIGINS
 
 
 def get_email_template(user_data: dict):
@@ -14,7 +14,7 @@ def get_email_template(user_data: dict):
     email.set_content(
         '<div>'
         f'<h1>Здравствуйте, {user_data["username"]}! Чтобы подтвердить Вашу почту, перейдите по ссылке ниже</h1>'
-        f'<a href="https://localhost:5173/verify/{user_data["id"]}/{user_data["token"]}">Тык</a>'
+        f'<a href="{ORIGINS[0]}/verify/{user_data["id"]}/{user_data["token"]}">Тык</a>'
         '</div>',
         subtype='html'
     )

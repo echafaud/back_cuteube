@@ -1,0 +1,19 @@
+FROM python:3.10
+
+RUN mkdir /video_hosting
+
+WORKDIR /video_hosting
+
+COPY requirements.txt .
+
+RUN pip install -r requirements.txt
+
+RUN apt-get update
+
+RUN apt-get install -y libmediainfo0v5
+
+COPY . .
+
+RUN chmod +x /video_hosting/docker/*.sh
+
+ENTRYPOINT /video_hosting/docker/init.sh

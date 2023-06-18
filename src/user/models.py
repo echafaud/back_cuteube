@@ -1,18 +1,19 @@
 import uuid
+from uuid import UUID as pyUUID
 from datetime import datetime
 from typing import List
 
 from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTableUUID, GUID, UUID_ID
-from sqlalchemy import (TIMESTAMP, Boolean, String)
+from sqlalchemy import TIMESTAMP, Boolean, String, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship, backref
 
 from src.database import Base
 
 
-class User(SQLAlchemyBaseUserTableUUID, Base):
+class User(Base):
     __tablename__ = "user"
 
-    id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+    id: Mapped[pyUUID] = mapped_column(UUID, primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(length=64), nullable=False)
     username: Mapped[str] = mapped_column(String(length=32), unique=True, index=True, nullable=False)
     registered_at: Mapped[TIMESTAMP] = mapped_column(TIMESTAMP, default=datetime.utcnow)
@@ -33,19 +34,19 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     posted_comments: Mapped[List["Comment"]] = relationship("Comment", backref="posted_comments", lazy="dynamic")
     videos: Mapped[List["Video"]] = relationship("Video", back_populates="user", lazy="dynamic")
     liked_videos: Mapped[List["Video"]] = relationship("Video", secondary="like",
-                                                       primaryjoin="and_(User.id==Like.user_id, Like.status)",
+                                                       primaryjoin="and_(User.id==Like.owner_id, Like.status)",
                                                        back_populates="liked_users", lazy="dynamic")
     disliked_videos: Mapped[List["Video"]] = relationship("Video", secondary="like",
-                                                          primaryjoin="and_(User.id==Like.user_id, Like.status==False)",
+                                                          primaryjoin="and_(User.id==Like.owner_id, Like.status==False)",
                                                           back_populates="disliked_users", lazy="dynamic")
     viewed_videos: Mapped[List["Video"]] = relationship("Video", back_populates="viewed_users",
-                                                        primaryjoin="User.id==UserView.author_id",
+                                                        primaryjoin="User.id==UserView.owner_id",
                                                         secondary="user_view", lazy="dynamic")
     subscribers: Mapped[List["User"]] = relationship("User",
                                                      primaryjoin="User.id==Subscription.subscribed",
                                                      secondaryjoin="User.id==Subscription.subscriber",
                                                      backref=backref("subscribed", lazy="dynamic"),
-                                                     secondary="subscription", lazy="dynamic",)
+                                                     secondary="subscription", lazy="dynamic", )
     # subscribers: Mapped[List["User"]] = relationship("User", secondary="subscription", lazy="selectin",
     #                                                  back_populates="subscribers",
     #                                                  foreign_keys="Subscription.subscriber",

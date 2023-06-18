@@ -41,8 +41,8 @@ class ViewManager:
             if await self.count_viewer_video_views(user, view) >= self.max_views_per_day:
                 raise LimitViewException
             view = await self.view_db.create(view.dict(), user.id)
-            if view.author_id:
-                user_view = await self.user_view_db.get(view.video_id, view.author_id)
+            if view.owner_id:
+                user_view = await self.user_view_db.get(view.video_id, view.owner_id)
                 if user_view:
                     await self.user_view_db.update(user_view, view.id)
                 else:

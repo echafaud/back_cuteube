@@ -23,7 +23,7 @@ class CommentDatabaseAdapter:
 
     async def create(self, create_dict: Dict[str, Any], user_id: uuid.UUID):
         comment = self.comment_table(**create_dict)
-        comment.author_id = user_id
+        comment.owner_id = user_id
         self.session.add(comment)
         await self.session.commit()
         return comment

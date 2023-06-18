@@ -22,7 +22,7 @@ class ViewDatabaseAdapter:
 
     async def create(self, create_dict: Dict[str, Any], user_id: Optional[uuid.UUID]):
         view = self.view_table(**create_dict)
-        view.author_id = user_id
+        view.owner_id = user_id
         if view.viewing_time < timedelta(seconds=15):
             view.viewing_time = None
         self.session.add(view)
@@ -49,7 +49,7 @@ class ViewDatabaseAdapter:
 
     async def get_user_video_views(self, user, video_id):
         statement = select(self.view_table).where(
-            self.view_table.video_id == video_id, self.view_table.author_id == user.id,
+            self.view_table.video_id == video_id, self.view_table.owner_id == user.id,
             self.view_table.viewed_at > datetime.utcnow() - timedelta(hours=24))
         return await self._get_views(statement)
 

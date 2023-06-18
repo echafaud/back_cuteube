@@ -2,8 +2,8 @@ import uuid
 from datetime import datetime
 from typing import List
 from enum import Enum as pyEnum
-from sqlalchemy import Enum as sqlEnum
-from fastapi_users_db_sqlalchemy import GUID, UUID_ID
+from sqlalchemy import Enum as sqlEnum, UUID
+from uuid import UUID as pyUUID
 from sqlalchemy import String, TIMESTAMP, ForeignKey
 from sqlalchemy.dialects.postgresql import INTERVAL, ENUM
 from sqlalchemy.orm import mapped_column, Mapped, relationship
@@ -20,11 +20,11 @@ class Permission(pyEnum):
 
 class Video(Base):
     __tablename__ = "video"
-    id: Mapped[UUID_ID] = mapped_column(GUID, primary_key=True, default=uuid.uuid4)
+    id: Mapped[pyUUID] = mapped_column(UUID, primary_key=True, default=uuid.uuid4)
     title: Mapped[str] = mapped_column(String(length=100), nullable=False)
     description: Mapped[str] = mapped_column(String(length=5000), nullable=False)
-    upload_at: Mapped[TIMESTAMP] = mapped_column(TIMESTAMP, default=datetime.utcnow)
-    author: Mapped[UUID_ID] = mapped_column(GUID, ForeignKey("user.id"))
+    uploaded_at: Mapped[TIMESTAMP] = mapped_column(TIMESTAMP, default=datetime.utcnow)
+    owner: Mapped[pyUUID] = mapped_column(UUID, ForeignKey("user.id"))
     duration: Mapped[INTERVAL] = mapped_column(INTERVAL)
     permission: Mapped[ENUM] = mapped_column(sqlEnum(Permission), default=Permission.for_everyone)
 

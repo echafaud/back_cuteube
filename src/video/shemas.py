@@ -2,7 +2,7 @@ import uuid
 
 from fastapi import Form, UploadFile, File
 from pydantic import BaseModel, PrivateAttr
-from pydantic.schema import timedelta
+from pydantic.schema import timedelta, date
 
 from src.video.models import Permission
 
@@ -38,10 +38,12 @@ class VideoUpload(BaseVideo):
 
 class VideoView(BaseVideo):
     id: uuid.UUID
-    author: uuid.UUID
+    owner: uuid.UUID
     views: int = 0
     likes: int = 0
     dislikes: int = 0
-    stop_timecode: timedelta = 0
     like: bool | None
     permission: str
+    stop_timecode: timedelta = 0
+    uploaded_at: date
+

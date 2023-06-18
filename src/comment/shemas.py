@@ -1,6 +1,7 @@
 import uuid
 
 from pydantic import BaseModel
+from pydantic.schema import date
 
 
 class BaseComment(BaseModel):
@@ -16,12 +17,10 @@ class CommentCreate(BaseComment):
 
 class CommentRead(CommentCreate):
     id: uuid.UUID
-    author_id: uuid.UUID
+    owner_id: uuid.UUID
+    posted_at: date
+    edited_at: date | None
 
 
 class CommentEdit(BaseComment):
-    id: uuid.UUID
-
-
-class CommentRemove(BaseModel):
     id: uuid.UUID

@@ -32,9 +32,10 @@ async def post_comment(comment: CommentCreate,
     if not video:
         raise NonExistentVideo
     user_read = UserRead.from_orm(user)
-    user_read.is_subscribed = await subscription_manager.check_subscription(user.id, video.author)
-    if video.permission not in video_manager.get_permissions(user_read, video.author):
+    user_read.is_subscribed = await subscription_manager.check_subscription(user.id, video.owner)
+    if video.permission not in video_manager.get_permissions(user_read, video.owner):
         raise AccessDenied
+    x = await comment_manager.post(user, comment)
     return await comment_manager.post(user, comment)
 
 
@@ -74,8 +75,8 @@ async def get_video_comments(id: UUID,
         raise NonExistentVideo
     if user.id:
         user = UserRead.from_orm(user)
-        user.is_subscribed = await subscription_manager.check_subscription(user.id, video.author)
-    if video.permission not in video_manager.get_permissions(user, video.author):
+        user.is_subscribed = await subscription_manager.check_subscription(user.id, video.owner)
+    if video.permission not in video_manager.get_permissions(user, video.owner):
         raise AccessDenied
     comments = await comment_manager.get_video_comments(video, limit, pagination)
     return comments
