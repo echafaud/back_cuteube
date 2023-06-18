@@ -17,7 +17,7 @@ services:
 
   app:
     container_name: video_hosting
-    image: back_app:v1
+    image: ghcr.io/echafaud/back_cuteube:v1
     env_file:
       - .env-prod
     ports:
@@ -27,7 +27,7 @@ services:
       - redis
 
   celery:
-    image: celery_app:v1
+    image: ghcr.io/echafaud/back_cuteube/celery:v1
     container_name: celery_container
     env_file:
       - .env-prod
