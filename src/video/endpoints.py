@@ -31,7 +31,9 @@ async def upload_video(video: VideoUpload = Depends(),
     result = video.dict()
     content = {
         'jsonrpc': '2.0',
-        'result': result | {"id": str(result["id"]), "owner": str(result["owner"])},
+        'result': result | {"id": str(result["id"]),
+                            "owner": str(result["owner"]),
+                            "uploaded_at": result["uploaded_at"].strftime('%m-%d-%Y')},
         'id': None
     }
     return JSONResponse(
