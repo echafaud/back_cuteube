@@ -23,6 +23,7 @@ class ViewDatabaseAdapter:
     async def create(self, create_dict: Dict[str, Any], user_id: Optional[uuid.UUID]):
         view = self.view_table(**create_dict)
         view.owner_id = user_id
+        view.fingerprint = view.fingerprint if view.viewing_time else None
         if view.viewing_time < timedelta(seconds=15):
             view.viewing_time = None
         self.session.add(view)

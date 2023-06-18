@@ -11,7 +11,7 @@ from src.database import Base
 class View(Base):
     __tablename__ = "view"
     id: Mapped[pyUUID] = mapped_column(UUID, primary_key=True, default=uuid.uuid4)
-    fingerprint: Mapped[str] = mapped_column(String, nullable=False)
+    fingerprint: Mapped[str] = mapped_column(String, nullable=True)
     owner_id: Mapped[pyUUID] = mapped_column(UUID, ForeignKey("user.id"), nullable=True)
     video_id: Mapped[pyUUID] = mapped_column(UUID, ForeignKey("video.id", ondelete='CASCADE'))
     stop_timecode: Mapped[INTERVAL] = mapped_column(INTERVAL)

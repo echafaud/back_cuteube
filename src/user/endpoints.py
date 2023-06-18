@@ -12,7 +12,7 @@ from src.user.shemas import UserCreate, UserRead, UserLogin
 from src.user.user import get_user_manager
 from src.user.user_manager import UserManager
 
-user_router = jsonrpc.Entrypoint(path='/api/v1/user')
+user_router = jsonrpc.Entrypoint(path='/user')
 
 
 @user_router.method(tags=['user'])

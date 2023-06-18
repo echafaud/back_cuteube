@@ -17,7 +17,7 @@ from src.video.models import Permission
 from src.video.video import get_video_manager
 from src.video.video_manager import VideoManager
 
-like_router = jsonrpc.Entrypoint(path='/api/v1/like')
+like_router = jsonrpc.Entrypoint(path='/like')
 
 
 @like_router.method(tags=["like"])

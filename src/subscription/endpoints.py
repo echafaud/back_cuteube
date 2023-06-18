@@ -11,7 +11,7 @@ from src.user.models import User
 from src.user.user import get_user_manager
 from src.user.user_manager import UserManager
 
-subscription_router = jsonrpc.Entrypoint(path='/api/v1/subscription')
+subscription_router = jsonrpc.Entrypoint(path='/subscription')
 
 
 @subscription_router.method(tags=['subscription'])

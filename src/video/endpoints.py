@@ -19,10 +19,10 @@ from src.video.shemas import VideoUpload, VideoView
 from src.video.video import get_video_manager
 from src.video.video_manager import VideoManager
 
-video_router = jsonrpc.Entrypoint(path='/api/v1/video')
+video_router = jsonrpc.Entrypoint(path='/video')
 
 
-@video_router.post('/api/v1/video/upload_video', tags=['video'])
+@video_router.post('/video/upload_video', tags=['video'])
 async def upload_video(video: VideoUpload = Depends(),
                        user: User = Depends(access_user),
                        video_manager: VideoManager = Depends(get_video_manager)

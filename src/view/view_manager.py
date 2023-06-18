@@ -28,27 +28,20 @@ class ViewManager:
                           view: BaseView,
                           video: Video) -> None:
         self._validate(view, video)
-        try:
-            visitor_visits: Response = fingerprint_instance.get_visits(view.fingerprint)
-        except ApiException:
+        if not user.id and not self._validate_fingerprint(view.fingerprint) \
+                or user.id and view.fingerprint and not self._validate_fingerprint(view.fingerprint):
             raise ViewRecordException
-        if not visitor_visits.visits:
-            raise ViewRecordException
-        visit_time = visitor_visits.visits[0].timestamp
-        time_now = time.mktime(datetime.now().timetuple()) * 1000
-        time_collision = time.mktime((datetime.now() - timedelta(hours=3)).timetuple()) * 1000
-        if time_now > visit_time > time_collision or visitor_visits.visits[0].confidence.score > 0.94:
-            if await self.count_viewer_video_views(user, view) >= self.max_views_per_day:
-                raise LimitViewException
-            view = await self.view_db.create(view.dict(), user.id)
-            if view.owner_id:
-                user_view = await self.user_view_db.get(view.video_id, view.owner_id)
-                if user_view:
-                    await self.user_view_db.update(user_view, view.id)
-                else:
-                    user_view = ViewRead.from_orm(view).create_user_view_dict()
-                    user_view["view_id"] = view.id
-                    await self.user_view_db.create(user_view)
+        if await self.count_viewer_video_views(user, view) >= self.max_views_per_day:
+            raise LimitViewException
+        view = await self.view_db.create(view.dict(), user.id)
+        if view.owner_id:
+            user_view = await self.user_view_db.get(view.video_id, view.owner_id)
+            if user_view:
+                await self.user_view_db.update(user_view, view.id)
+            else:
+                user_view = ViewRead.from_orm(view).create_user_view_dict()
+                user_view["view_id"] = view.id
+                await self.user_view_db.create(user_view)
 
     async def remove_user_view(self,
                                user: User,
@@ -88,6 +81,20 @@ class ViewManager:
         elif view.stop_timecode < timedelta(seconds=0):
             raise InvalidView(data={'reason': 'Stoptimecode cannot be negative'})
         elif view.stop_timecode > video.duration:
-            raise InvalidView(data={'reason': 'Stoptimecode cannot be more than the duration of the video'})
+            view.stop_timecode = video.duration
+            # raise InvalidView(data={'reason': 'Stoptimecode cannot be more than the duration of the video'})
         elif view.viewing_time > video.duration:
-            raise InvalidView(data={'reason': 'Viewed time cannot be more than the duration of the video'})
+            view.viewing_time = video.duration
+            # raise InvalidView(data={'reason': 'Viewed time cannot be more than the duration of the video'})
+
+    def _validate_fingerprint(self, fingerprint: str):
+        try:
+            visitor_visits: Response = fingerprint_instance.get_visits(fingerprint)
+        except ApiException:
+            raise ViewRecordException
+        if not visitor_visits.visits:
+            raise ViewRecordException
+        visit_time = visitor_visits.visits[0].timestamp
+        time_now = time.mktime(datetime.now().timetuple()) * 1000
+        time_collision = time.mktime((datetime.now() - timedelta(hours=3)).timetuple()) * 1000
+        return time_now > visit_time > time_collision or visitor_visits.visits[0].confidence.score > 0.94

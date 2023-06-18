@@ -4,7 +4,7 @@ from src.user.authentication_backend import AdvancedAuthenticationBackend
 from src.user.authenticator import Authenticator
 from src.user.token_manager import TokenManager
 from src.user.auth_user_manager import AuthUserManager
-from src.config import SECRET
+from src.config import SECRET, COOKIE_DOMAIN
 from src.user.user import get_auth_user_manager, get_user_manager
 
 
@@ -17,7 +17,8 @@ class Settings(BaseModel):
     # Enable csrf double submit protection. default is True
     cookie_csrf_protect: bool = True
     # Change to 'lax' in production to make your website more secure from CSRF Attacks, default is None
-    # authjwt_cookie_samesite: str = 'lax'
+    cookie_samesite: str = 'lax'
+    cookie_domain: str = COOKIE_DOMAIN
 
 
 @Authenticator.load_config

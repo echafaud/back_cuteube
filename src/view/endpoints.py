@@ -16,7 +16,7 @@ from src.view.shemas import BaseView
 from src.view.view import get_view_manager
 from src.view.view_manager import ViewManager
 
-view_router = jsonrpc.Entrypoint(path='/api/v1/view')
+view_router = jsonrpc.Entrypoint(path='/view')
 
 
 @view_router.method(tags=['view'])

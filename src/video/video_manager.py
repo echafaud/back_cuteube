@@ -23,6 +23,7 @@ class VideoManager:
     max_preview_size = 10
     max_title_len = 100
     max_description_len = 5000
+    min_video_duration = 15
 
     def __init__(self,
                  s3: BaseClient,
@@ -318,3 +319,6 @@ class VideoManager:
         elif preview_media_info.general_tracks[0].file_size / (1024 * 1024) > self.max_preview_size:
             raise UploadVideoException(
                 data={"reason": f'Exceeded the maximum preview size. Max.size = {self.max_preview_size}mb'})
+        elif video_media_info.general_tracks[0].duration < self.min_video_duration:
+            raise UploadVideoException(
+                data={"reason": f'Invalid video duration. The minimum duration is {self.min_video_duration} seconds'})

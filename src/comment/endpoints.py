@@ -18,7 +18,7 @@ from src.video.models import Permission
 from src.video.video import get_video_manager
 from src.video.video_manager import VideoManager
 
-comment_router = jsonrpc.Entrypoint(path='/api/v1/comment')
+comment_router = jsonrpc.Entrypoint(path='/comment')
 
 
 @comment_router.method(tags=['comment'])
@@ -35,7 +35,6 @@ async def post_comment(comment: CommentCreate,
     user_read.is_subscribed = await subscription_manager.check_subscription(user.id, video.owner)
     if video.permission not in video_manager.get_permissions(user_read, video.owner):
         raise AccessDenied
-    x = await comment_manager.post(user, comment)
     return await comment_manager.post(user, comment)
 
 
