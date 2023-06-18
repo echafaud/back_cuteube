@@ -1,3 +1,5 @@
-FROM back_app:v1
+FROM ghcr.io/echafaud/back_cuteube:v1
+
+LABEL org.opencontainers.image.source=https://github.com/echafaud/back_cuteube
 
 ENTRYPOINT /video_hosting/docker/celery.sh
