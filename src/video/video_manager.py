@@ -53,7 +53,6 @@ class VideoManager:
                                           video: Video,
                                           current_user: User = None
                                           ) -> VideoView:
-        print(video, video.permission)
         video.permission = video.permission.name if isinstance(video.permission, Permission) else video.permission
         video_view = VideoView.from_orm(video)
         video_view.likes = await self.like_manager.count_video_likes(video)
@@ -146,7 +145,6 @@ class VideoManager:
         current_user_permissions = self.get_permissions(current_user)
         latest_videos = await self.video_db.get_latest_videos(current_user_permissions, current_user)
         paginated_result = self._paginate(limit, pagination, latest_videos)
-        print(paginated_result)
         return [await self.convert_video_to_video_view(video, current_user) for video in paginated_result]
 
     async def get_liked_by_users(self,
@@ -176,6 +174,16 @@ class VideoManager:
                                ) -> List[VideoView]:
         liked_videos = await self.video_db.get_liked_videos(current_user)
         paginated_result = self._paginate(limit, pagination, liked_videos)
+        return [await self.convert_video_to_video_view(video, current_user) for video in paginated_result]
+
+    async def get_subscribed_videos(self,
+                                    current_user: User,
+                                    limit: int,
+                                    pagination: int,
+                                    ) -> List[VideoView]:
+        current_user_permissions = self.get_permissions(current_user)
+        subscribed_videos = await self.video_db.get_subscribed_videos(current_user_permissions, current_user)
+        paginated_result = self._paginate(limit, pagination, subscribed_videos)
         return [await self.convert_video_to_video_view(video, current_user) for video in paginated_result]
 
     async def get_viewed_videos(self, current_user: User,

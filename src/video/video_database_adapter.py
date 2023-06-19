@@ -41,7 +41,6 @@ class VideoDatabaseAdapter:
 
     async def get_latest_videos(self, user_permissions: List[Permission], user: User):
         statement = self.get_permission_select(user, user_permissions).order_by(self.video_table.uploaded_at.desc())
-        print(statement)
         return await self._get_videos(statement)
 
     async def get_liked_by_users(self, user_permissions: List[Permission], user: User):
@@ -55,6 +54,12 @@ class VideoDatabaseAdapter:
             View.viewing_time != None).group_by(
             self.video_table.id).order_by(
             count().desc())
+        return await self._get_videos(statement)
+
+    async def get_subscribed_videos(self, user_permissions: List[Permission], user: User):
+        statement = self.get_permission_select(user, user_permissions) \
+            .where(and_(self.video_table.owner == Subscription.subscribed, user.id == Subscription.subscriber)) \
+            .order_by(self.video_table.uploaded_at.desc())
         return await self._get_videos(statement)
 
     async def get_liked_videos(self, current_user: User):

@@ -133,6 +133,15 @@ async def get_viewed_videos(limit: int = 20,
 
 
 @video_router.method(tags=['video'])
+async def get_subscribed_videos(limit: int = 20,
+                                pagination: int = 0,
+                                user: User = Depends(access_user),
+                                video_manager: VideoManager = Depends(get_video_manager)
+                                ) -> List[VideoView]:
+    return await video_manager.get_subscribed_videos(user, limit, pagination)
+
+
+@video_router.method(tags=['video'])
 async def get_user_videos(id: UUID,
                           limit: int = 20,
                           pagination: int = 0,
