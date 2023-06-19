@@ -28,11 +28,10 @@ class ViewManager:
                           view: BaseView,
                           video: Video) -> None:
         self._validate(view, video)
-        if not user.id and not self._validate_fingerprint(view.fingerprint) \
-                or user.id and view.fingerprint and not self._validate_fingerprint(view.fingerprint):
+        if view.fingerprint and not self._validate_fingerprint(view.fingerprint):
             raise ViewRecordException
         if await self.count_viewer_video_views(user, view) >= self.max_views_per_day:
-            raise LimitViewException
+            view.viewing_time = None
         view = await self.view_db.create(view.dict(), user.id)
         if view.owner_id:
             user_view = await self.user_view_db.get(view.video_id, view.owner_id)

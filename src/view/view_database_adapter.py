@@ -24,7 +24,7 @@ class ViewDatabaseAdapter:
         view = self.view_table(**create_dict)
         view.owner_id = user_id
         view.fingerprint = view.fingerprint if view.viewing_time else None
-        if view.viewing_time < timedelta(seconds=15):
+        if view.viewing_time is not None and view.viewing_time < timedelta(seconds=15):
             view.viewing_time = None
         self.session.add(view)
         await self.session.commit()

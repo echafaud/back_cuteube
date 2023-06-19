@@ -41,6 +41,7 @@ class VideoDatabaseAdapter:
 
     async def get_latest_videos(self, user_permissions: List[Permission], user: User):
         statement = self.get_permission_select(user, user_permissions).order_by(self.video_table.uploaded_at.desc())
+        print(statement)
         return await self._get_videos(statement)
 
     async def get_liked_by_users(self, user_permissions: List[Permission], user: User):
@@ -95,7 +96,7 @@ class VideoDatabaseAdapter:
 
     async def _get_videos(self, statement):
         results = await self.session.execute(statement)
-        return results.scalars().all()
+        return results.scalars().unique().all()
 
     async def _get_video(self, statement: Select):
         results = await self.session.execute(statement)
