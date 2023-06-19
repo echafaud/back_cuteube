@@ -261,6 +261,9 @@ class VideoManager:
             current_permissions.append(Permission.for_subscribers)
         if video_author and current_user.id == video_author:
             current_permissions.append(Permission.for_myself)
+
+        if current_user.is_superuser:
+            current_permissions = [permission for permission in Permission]
         return current_permissions
 
     def check_access(self, video: Video, current_user: User):
